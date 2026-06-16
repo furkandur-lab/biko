@@ -379,7 +379,7 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
       <div class="ph"><div><h1>Ayarlar</h1></div></div>
       <div class="card" style="max-width:500px;">
         <div class="stit">Yapay Zeka API</div>
-        <div class="fi"><label>Anthropic API Anahtarı (sk-ant-...)</label><input type="password" id="aiKeyInput" placeholder="sk-ant-…"></div>
+        <div class="fi"><label>Gemini API Anahtarı</label><input type="password" id="aiKeyInput" placeholder="AQ.Ab…"><div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">Google AI Studio'dan aldığınız anahtar. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--teal);">Anahtar al →</a></div></div>
         <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;">Anahtar yalnızca bu tarayıcıda saklanır.</div>
         <button class="bp" id="saveAiKey">Kaydet</button>
         <div class="stit" style="margin-top:18px;">Koç PIN Değiştir</div>
@@ -443,7 +443,7 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
             <div class="fi"><label>Soru Sayısı</label><select id="aiCount"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option></select></div>
             <div class="fi"><label>Zorluk</label><select id="aiDiff"><option value="kolay">Kolay</option><option value="orta" selected>Orta</option><option value="zor">Zor</option></select></div>
           </div>
-          <div class="fi" style="background:#FDECD8;border-radius:9px;padding:11px;font-size:12.5px;"><b>⚠️ API Anahtarı:</b> Ayarlar sayfasından Anthropic anahtarını girin. <span id="aiKeyStatus" style="color:var(--good);font-weight:700;"></span></div>
+          <div class="fi" style="background:#E8F4FD;border-radius:9px;padding:11px;font-size:12.5px;border:1px solid #BDD8F0;"><b>🔑 Gemini API:</b> Ayarlar sayfasından Google Gemini anahtarınızı girin. <span id="aiKeyStatus" style="color:var(--good);font-weight:700;"></span></div>
           <button class="bp" id="genTestBtn" style="margin-top:8px;padding:11px 22px;">✨ Test Üret</button>
         </div>
         <div id="aiTestLoading" class="hidden"><div class="ai-spinner"><div class="spin"></div>Yapay zeka sorular üretiyor, lütfen bekleyin…</div></div>
@@ -1057,7 +1057,7 @@ function rAiTest(){
   document.getElementById('genTestBtn').onclick=()=>startAiTest(c);
 }
 async function startAiTest(c){
-  const key=localStorage.getItem(AI_KEY_K)||'';if(!key){alert('Lütfen önce Ayarlar sayfasından Anthropic API anahtarını kaydedin.');return;}
+  const key=localStorage.getItem(AI_KEY_K)||'';if(!key){alert('Lütfen önce ⚙ Ayarlar sayfasından Gemini API anahtarınızı kaydedin.');return;}
   const topics=document.getElementById('aiTopics').value.trim();if(!topics){alert('En az bir konu girin.');return;}
   const count=Number(document.getElementById('aiCount').value)||10;const diff=document.getElementById('aiDiff').value;
   document.getElementById('aiTestSetup').classList.add('hidden');document.getElementById('aiTestLoading').classList.remove('hidden');document.getElementById('aiQuizArea').classList.add('hidden');
@@ -1065,11 +1065,20 @@ async function startAiTest(c){
   catch(e){document.getElementById('aiTestLoading').classList.add('hidden');document.getElementById('aiTestSetup').classList.remove('hidden');alert('AI hatası: '+e.message);}
 }
 async function generateAiTest(topics,count,difficulty,key){
-  const prompt=`Sen TYT/AYT hazırlık uzmanı bir Türk eğitim asistanısın. Şu konularda ${count} adet ${difficulty} zorlukta çoktan seçmeli soru üret: ${topics}\n\nSADECE şu JSON formatında yanıt ver:\n{"questions":[{"question":"Soru metni","options":["A) ...","B) ...","C) ...","D) ..."],"correctAnswer":"A) ...","explanation":"Kısa açıklama"}]}\n\nJSON dışında hiçbir şey yazma.`;
-  const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,messages:[{role:'user',content:prompt}]})});
-  if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'API hatası');}
-  const data=await resp.json();const text=data.content.map(i=>i.text||'').join('');const clean=text.replace(/```json|```/g,'').trim();const parsed=JSON.parse(clean);
-  if(!parsed.questions||!Array.isArray(parsed.questions))throw new Error('Geçersiz AI yanıtı');return parsed.questions;
+  const prompt=`Sen TYT/AYT hazırlık uzmanı bir Türk eğitim asistanısın. Şu konularda ${count} adet ${difficulty} zorlukta çoktan seçmeli soru üret: ${topics}
+
+SADECE şu JSON formatında yanıt ver, başka HİÇBİR ŞEY yazma, markdown kullanma:
+{"questions":[{"question":"Soru metni","options":["A) ...","B) ...","C) ...","D) ..."],"correctAnswer":"A) ...","explanation":"Kısa açıklama"}]}`;
+  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key;
+  const resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:4000}})});
+  if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'Gemini API hatası: '+resp.status);}
+  const data=await resp.json();
+  const text=(data.candidates?.[0]?.content?.parts?.[0]?.text)||'';
+  const clean=text.replace(/```json|```/g,'').trim();
+  let parsed;
+  try{parsed=JSON.parse(clean);}catch(e){const m=clean.match(/\{[\s\S]*\}/);if(!m)throw new Error('JSON parse hatası — Gemini beklenmedik yanıt döndürdü.');parsed=JSON.parse(m[0]);}
+  if(!parsed.questions||!Array.isArray(parsed.questions))throw new Error('Geçersiz Gemini yanıtı');
+  return parsed.questions;
 }
 function renderAiQ(c){
   const area=document.getElementById('aiQuizArea');if(aiQIdx>=aiTestQ.length){showAiScore(c);return;}
