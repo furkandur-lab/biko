@@ -1069,32 +1069,32 @@ async function generateAiTest(topics,count,difficulty,key){
 
 SADECE şu JSON formatında yanıt ver, başka HİÇBİR ŞEY yazma, markdown kullanma:
 {"questions":[{"question":"Soru metni","options":["A) ...","B) ...","C) ...","D) ..."],"correctAnswer":"A) ...","explanation":"Kısa açıklama"}]}`;
-  const MODELS=[
-    {n:'gemini-1.5-flash',v:'v1'},
-    {n:'gemini-1.5-flash-latest',v:'v1'},
-    {n:'gemini-1.5-pro',v:'v1'},
-    {n:'gemini-1.5-pro-latest',v:'v1'},
-    {n:'gemini-1.5-flash',v:'v1beta'},
-    {n:'gemini-1.5-pro',v:'v1beta'},
+  const ENDPOINTS=[
+    'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key='+key,
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,
+    'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key='+key,
   ];
   let lastErr='';
-  for(const {n,v} of MODELS){
+  for(const url of ENDPOINTS){
     try{
-      const url='https://generativelanguage.googleapis.com/'+v+'/models/'+n+':generateContent?key='+key;
       const resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:4000}})});
       const data=await resp.json();
-      if(!resp.ok){const msg=data.error?.message||'HTTP '+resp.status;if(resp.status===429||resp.status===503||msg.toLowerCase().includes('quota')||msg.toLowerCase().includes('limit')){lastErr=n+'('+v+'): '+msg;continue;}throw new Error(n+': '+msg);}
+      if(!resp.ok){lastErr=url.split('/models/')[1].split(':')[0]+': '+(data.error?.message||'HTTP '+resp.status);continue;}
       const text=(data.candidates?.[0]?.content?.parts?.[0]?.text)||'';
-      if(!text){lastErr=n+'('+v+'): Boş yanıt';continue;}
+      if(!text){lastErr='Boş yanıt';continue;}
       const clean=text.replace(/```json|```/g,'').trim();
       let parsed;
-      try{parsed=JSON.parse(clean);}catch(e2){const m=clean.match(/\{[\s\S]*\}/);if(!m){lastErr=n+': JSON parse hatası';continue;}try{parsed=JSON.parse(m[0]);}catch(e3){lastErr=n+': JSON parse hatası 2';continue;}}
-      if(!parsed||!parsed.questions||!Array.isArray(parsed.questions)||parsed.questions.length===0){lastErr=n+': Geçersiz yanıt yapısı';continue;}
-      console.log('BİKOÇ AI: '+n+' ('+v+') ile '+parsed.questions.length+' soru üretildi.');
+      try{parsed=JSON.parse(clean);}
+      catch(e2){
+        const m=clean.match(/\{[\s\S]*"questions"[\s\S]*\}/);
+        if(!m){lastErr='JSON parse hatası';continue;}
+        try{parsed=JSON.parse(m[0]);}catch(e3){lastErr='JSON parse hatası 2';continue;}
+      }
+      if(!parsed||!Array.isArray(parsed.questions)||parsed.questions.length===0){lastErr='Geçersiz yapı';continue;}
       return parsed.questions;
-    }catch(e){lastErr=n+': '+e.message;console.warn('BİKOÇ AI model hatası:',n,e.message);}
+    }catch(e){lastErr=e.message;}
   }
-  throw new Error('Soru üretilemedi.\n\nDetay: '+lastErr+'\n\nLütfen Ayarlar sayfasından API anahtarınızı kontrol edin.');
+  throw new Error('Soru üretilemedi: '+lastErr+'\n\nAPI anahtarınızın geçerli olduğundan ve Google AI Studio hesabınızda gemini-1.5-flash modelinin aktif olduğundan emin olun.');
 }
 function renderAiQ(c){
   const area=document.getElementById('aiQuizArea');if(aiQIdx>=aiTestQ.length){showAiScore(c);return;}
