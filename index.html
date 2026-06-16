@@ -900,7 +900,7 @@ function parseYt(raw){
   return{ytId,embedSrc:`https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&rel=0`};
 }
 function logV(type,msg){const c=state.clients.find(x=>x.id===ytCId);if(!c)return;c.videoLogs.push({videoId:ytVId,type,msg,ts:Date.now()});save();}
-function stopVid(){if(ytInt){clearInterval(ytInt);ytInt=null;}ytCId=null;ytVId=null;ytLast=-1;}
+function stopVid(){if(ytInt){clearInterval(ytInt);ytInt=null;}if(window._ytWatchInt){clearInterval(window._ytWatchInt);window._ytWatchInt=null;}if(window._localWatchInt){clearInterval(window._localWatchInt);window._localWatchInt=null;}ytCId=null;ytVId=null;ytLast=-1;}
 async function launchPlayer(v,cId){
   stopVid(); ytCId=cId; ytVId=v.id;
   const pw=$('ytw'); if(!pw) return;
@@ -914,13 +914,25 @@ async function launchPlayer(v,cId){
     let lastT=0;
     vid.addEventListener('timeupdate',()=>{const cur=Math.floor(vid.currentTime);const d=cur-lastT;if(lastT>0&&d>3)logV('seek-fwd',`⏩ ${lastT}s→${cur}s`);else if(lastT>0&&d<-1)logV('seek-bk',`⏪ ${lastT}s→${cur}s`);if(cur>0)lastT=cur;});
     vid.addEventListener('ratechange',()=>logV('rate',`⚡ Hız ${vid.playbackRate}×`));
-    vid.addEventListener('ended',()=>logV('watch','Video tamamlandı ✓'));
+    vid.addEventListener('ended',()=>{
+      logV('watch','Video tamamlandı ✓');
+      if(window._localWatchInt){clearInterval(window._localWatchInt);window._localWatchInt=null;}
+    });
+    let localWatchSec=0;
+    if(window._localWatchInt) clearInterval(window._localWatchInt);
+    window._localWatchInt=setInterval(()=>{
+      if(!vid.paused&&!vid.ended){localWatchSec+=30;logV('watch',localWatchSec+'s izlendi');}
+    },30000);
   } else {
     const src=v.embedSrc||`https://www.youtube-nocookie.com/embed/${v.ytId}?enablejsapi=1&rel=0`;
     const iframe=document.createElement('iframe');iframe.src=src;iframe.style.cssText='width:100%;height:100%;border:none;';iframe.allow='accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture';iframe.allowFullscreen=true;
     pw.innerHTML=''; pw.appendChild(iframe); ytLast=0;
     if(ytInt) clearInterval(ytInt);
-    ytInt=setInterval(()=>{try{iframe.contentWindow.postMessage(JSON.stringify({event:'command',func:'getCurrentTime',args:''}),'*');}catch(e){}},1000);
+    ytInt=setInterval(()=>{try{iframe.contentWindow.postMessage(JSON.stringify({event:'command',func:'getCurrentTime',args:[]}),'*');}catch(e){}},1000);
+    // 30 saniyede bir izleme logu
+    let ytWatchSec=0;
+    if(window._ytWatchInt) clearInterval(window._ytWatchInt);
+    window._ytWatchInt=setInterval(()=>{ytWatchSec+=30;logV('watch',ytWatchSec+'s izlendi');},30000);
   }
 }
 window.addEventListener('message',ev=>{
@@ -928,7 +940,12 @@ window.addEventListener('message',ev=>{
   try{
     const data=typeof ev.data==='string'?JSON.parse(ev.data):ev.data;
     if(data&&data.event==='infoDelivery'&&data.info){const cur=Math.floor(data.info.currentTime||0);if(ytLast>=0&&cur>0){const diff=cur-ytLast;if(diff>3)logV('seek-fwd',`⏩ ${ytLast}s→${cur}s`);else if(diff<-1)logV('seek-bk',`⏪ ${ytLast}s→${cur}s`);}if(cur>0)ytLast=cur;}
-    if(data&&data.event==='onPlaybackRateChange') logV('rate',`⚡ Hız ${data.info}×`);
+    if(data&&data.event==='onPlaybackRateChange') logV('rate','⚡ Hız '+data.info+'× yapıldı');
+    if(data&&data.event==='infoDelivery'&&data.info&&data.info.playbackRate!==undefined){
+      const nr=data.info.playbackRate;
+      if(window._ytLastRate!==undefined&&nr!==window._ytLastRate) logV('rate','⚡ Hız '+window._ytLastRate+'×→'+nr+'×');
+      window._ytLastRate=nr;
+    }
   }catch(e){}
 });
 
@@ -1298,25 +1315,105 @@ function rVtCoach(){
   rVtDetail();
 }
 function rVtDetail(){
-  const wrap=$('vtDetail'); const c=state.clients.find(x=>x.id===selC.vt);
+  const wrap=$('vtDetail');
+  const c=state.clients.find(x=>x.id===selC.vt);
   if(!c){wrap.innerHTML='<div class="empty">Danışan seçin</div>';return;}
-  let h=`<h2 style="margin:0 0 12px;font-family:Fraunces,serif;">${c.name} — Video Logları</h2>`;
+  let h=`<h2 style="margin:0 0 12px;font-family:Fraunces,serif;">${c.name} — Video Analizi</h2>`;
   if(!c.videos.length){h+='<div class="empty">Video atanmamış.</div>';wrap.innerHTML=h;return;}
+
   c.videos.forEach(v=>{
-    const logs=c.videoLogs.filter(l=>l.videoId===v.id).sort((a,b)=>a.ts-b.ts);
-    const fw=logs.filter(l=>l.type==='seek-fwd').length;
-    const bk=logs.filter(l=>l.type==='seek-bk').length;
-    const rt=logs.filter(l=>l.type==='rate').length;
-    h+=`<div class="ec"><div class="ehead"><div class="ename">▶ ${v.title}</div><div class="edate">${fd(v.assignedDate)}</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
-        <span style="font-size:11.5px;background:var(--cream);padding:3px 7px;border-radius:5px;">${logs.length} log</span>
-        <span style="font-size:11.5px;background:#FFF3E0;color:#E65100;padding:3px 7px;border-radius:5px;">⏩ ${fw} ileri</span>
-        <span style="font-size:11.5px;background:#E8F5E9;color:#2E7D32;padding:3px 7px;border-radius:5px;">⏪ ${bk} geri</span>
-        <span style="font-size:11.5px;background:var(--student-soft);color:var(--student);padding:3px 7px;border-radius:5px;">⚡ ${rt} hız</span>
+    const logs=(c.videoLogs||[]).filter(l=>l.videoId===v.id).sort((a,b)=>a.ts-b.ts);
+    // Tip bazlı sayılar
+    const fw   = logs.filter(l=>l.type==='seek-fwd').length;
+    const bk   = logs.filter(l=>l.type==='seek-bk').length;
+    const rt   = logs.filter(l=>l.type==='rate').length;
+    const wt   = logs.filter(l=>l.type==='watch');
+
+    // İzleme süresi: "X s izlendi" loglarından topla
+    const watchSecs = wt.reduce((sum,l)=>{
+      const m=l.msg&&l.msg.match(/(\d+)s izlendi/);
+      return sum+(m?Number(m[1]):0);
+    },0);
+    const watchMin  = Math.floor(watchSecs/60);
+    const watchSec2 = watchSecs%60;
+    const completed = wt.some(l=>l.msg&&l.msg.includes('tamamlandı'));
+
+    // Hız değişimleri: msg içinden parse et
+    const rateVals = logs.filter(l=>l.type==='rate').map(l=>{
+      const m=l.msg&&l.msg.match(/(\d+(?:\.\d+)?)×/g);
+      if(!m) return 1;
+      return Math.max(...m.map(x=>parseFloat(x)));
+    });
+    const maxRate  = rateVals.length ? Math.max(...rateVals) : 1;
+    const used2x   = maxRate >= 2;
+
+    h+=`<div class="ec" style="margin-bottom:14px;">
+      <div class="ehead" style="flex-wrap:wrap;gap:6px;">
+        <div>
+          <div class="ename">▶ ${v.title}</div>
+          <div class="edate">${v.type==='local'?'Yerel video':'YouTube'} · Atandı: ${fd(v.assignedDate)}</div>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
+          ${completed?'<span class="tag done">✓ Tamamlandı</span>':logs.length?'<span class="tag">Devam ediyor</span>':'<span class="tag" style="background:var(--cream);">İzlenmedi</span>'}
+          <button class="bd vt-clear-btn" data-vid="${v.id}" style="font-size:11px;padding:3px 8px;">🗑 Logları Temizle</button>
+        </div>
       </div>
-      <div style="max-height:180px;overflow-y:auto;">${logs.slice(-15).map(l=>{let cls='wt',ic='▶';if(l.type==='seek-fwd'){cls='sf';ic='⏩';}else if(l.type==='seek-bk'){cls='sb2';ic='⏪';}else if(l.type==='rate'){cls='rt';ic='⚡';}return`<div class="le ${cls}">${ic} ${new Date(l.ts).toLocaleString('tr-TR')} — ${l.msg}</div>`;}).join('')||'<div style="font-size:12px;color:var(--ink-soft);">Log yok.</div>'}</div></div>`;
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0;">
+        <div style="background:#F5F9F8;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:var(--teal-deep);">${watchSecs>0?(watchMin>0?watchMin+'dk '+(watchSec2>0?watchSec2+'sn':''):watchSec2+'sn'):'—'}</div>
+          <div style="font-size:10px;color:var(--ink-soft);margin-top:2px;">⏱ İzleme Süresi</div>
+        </div>
+        <div style="background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#E65100;">${fw}</div>
+          <div style="font-size:10px;color:var(--ink-soft);margin-top:2px;">⏩ İleri Sarma</div>
+        </div>
+        <div style="background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#2E7D32;">${bk}</div>
+          <div style="font-size:10px;color:var(--ink-soft);margin-top:2px;">⏪ Geri Sarma</div>
+        </div>
+        <div style="background:var(--student-soft);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:var(--student);">${maxRate>1?maxRate+'×':'—'}</div>
+          <div style="font-size:10px;color:var(--ink-soft);margin-top:2px;">⚡ Maks Hız</div>
+        </div>
+      </div>
+
+      ${used2x?`<div style="background:#FFF3E0;border-radius:7px;padding:7px 11px;font-size:12px;color:#E65100;margin-bottom:7px;">
+        ⚡ Bu öğrenci videoyu <b>${maxRate}× hızda</b> izledi — içerik tam kavranmamış olabilir.
+      </div>`:''}
+      ${fw>=3?`<div style="background:var(--rose-soft);border-radius:7px;padding:7px 11px;font-size:12px;color:var(--rose);margin-bottom:7px;">
+        ⏩ <b>${fw} kez ileri sarma</b> — bazı bölümler atlanmış olabilir.
+      </div>`:''}
+      ${bk>=3?`<div style="background:#E8F5E9;border-radius:7px;padding:7px 11px;font-size:12px;color:#2E7D32;margin-bottom:7px;">
+        ⏪ <b>${bk} kez geri sarma</b> — bu bölümler tekrar izlenmiş, muhtemelen anlaşılmak istenmiş.
+      </div>`:''}
+
+      ${logs.length?`
+      <div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Log Detayı (Son 20)</div>
+      <div style="max-height:160px;overflow-y:auto;background:var(--cream);border-radius:8px;padding:8px;">
+        ${logs.slice(-20).map(l=>{
+          let bg='#F5F0E8',ic='▶',tc='var(--ink-soft)';
+          if(l.type==='seek-fwd'){bg='#FFF3E0';ic='⏩';tc='#E65100';}
+          else if(l.type==='seek-bk'){bg='#E8F5E9';ic='⏪';tc='#2E7D32';}
+          else if(l.type==='rate'){bg='var(--student-soft)';ic='⚡';tc='var(--student)';}
+          return`<div style="font-size:11.5px;padding:4px 8px;border-radius:5px;margin-bottom:3px;background:${bg};color:${tc};">
+            ${ic} <span style="font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.7;">${new Date(l.ts).toLocaleTimeString('tr-TR')}</span> ${l.msg}
+          </div>`;
+        }).join('')}
+      </div>`:'<div style="font-size:12px;color:var(--ink-soft);padding:6px 0;">Henüz izleme logu yok.</div>'}
+    </div>`;
   });
+
   wrap.innerHTML=h;
+  wrap.querySelectorAll('.vt-clear-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      const vid=Number(btn.dataset.vid);
+      if(confirm('Bu videoya ait tüm loglar silinsin mi?')){
+        c.videoLogs=(c.videoLogs||[]).filter(l=>l.videoId!==vid);
+        save(); rVtDetail();
+      }
+    };
+  });
 }
 
 function rMoodCoach(){
