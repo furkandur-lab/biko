@@ -1489,6 +1489,183 @@ function rParDash(){
 }
 
 // ═══════════════════════════════════════════════════
+// AI KOÇ SAYFASI
+// ═══════════════════════════════════════════════════
+let aiCoachSelId = null;
+
+function rAiCoach(){
+  const list=$('aiCoachCL'); list.innerHTML='';
+  state.clients.forEach(c=>{
+    const d=document.createElement('div'); d.className='ci'+(c.id===aiCoachSelId?' active':'');
+    const testCnt=(c.aiTests||[]).length;
+    d.innerHTML=`<div class="av">${ini(c.name)}</div><div><div class="cn">${c.name}</div><div class="cs">${testCnt} AI test sonucu</div></div>`;
+    d.onclick=()=>{aiCoachSelId=c.id; rAiCoach(); rAiCoachDetail();};
+    list.appendChild(d);
+  });
+  rAiCoachDetail();
+}
+
+function rAiCoachDetail(){
+  const wrap=$('aiCoachPanel');
+  const c=state.clients.find(x=>x.id===aiCoachSelId);
+  if(!c){wrap.innerHTML='<div class="empty">Danışan seçin</div>';return;}
+
+  // Zayıf konular otomatik tespiti
+  const te={};
+  c.exams.forEach(ex=>ex.subjects.forEach(s=>(s.weakTopics||[]).forEach(t=>{
+    const k=s.name+': '+t; te[k]=(te[k]||0)+1;
+  })));
+  const autoTopics=Object.entries(te).sort((a,b)=>b[1]-a[1]).map(([k])=>k).slice(0,3);
+
+  // Geçmiş test sonuçları
+  const tests=(c.aiTests||[]).slice().reverse();
+  const avgPct=tests.length?Math.round(tests.reduce((s,t)=>s+t.pct,0)/tests.length):0;
+  const trend=tests.length>=2?(tests[0].pct>tests[1].pct?'📈':'📉'):'';
+
+  const histHTML=tests.length?tests.map(t=>{
+    const badge=t.pct>=80?'done':t.pct>=60?'auto':'';
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);">
+      <div>
+        <div style="font-weight:600;font-size:13px;">${t.topics||'Genel Konular'}</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);">${fd(t.date)} · ${t.total} soru · ${Math.floor(t.elapsed/60)}dk${t.assignedByCoach?' · <span class="tag auto">Koç Ödevi</span>':''}</div>
+      </div>
+      <div style="text-align:right;">
+        <span class="tag ${badge}" style="font-size:13px;padding:4px 10px;">${t.pct}%</span>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">${t.correct}/${t.total} doğru</div>
+      </div>
+    </div>`;
+  }).join(''):'<div style="font-size:13px;color:var(--ink-soft);padding:10px 0;">Henüz AI testi çözülmemiş.</div>';
+
+  wrap.innerHTML=`
+    <h2 style="margin:0 0 14px;font-family:Fraunces,serif;">${c.name} — AI Koç</h2>
+
+    ${tests.length?`<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:90px;background:var(--student-soft);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--student);">${avgPct}%</div>
+        <div style="font-size:10.5px;color:var(--ink-soft);">Ortalama</div>
+      </div>
+      <div style="flex:1;min-width:90px;background:var(--cream);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--teal-deep);">${tests.length}</div>
+        <div style="font-size:10.5px;color:var(--ink-soft);">Test</div>
+      </div>
+      <div style="flex:1;min-width:90px;background:var(--cream);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--teal-deep);">${trend||'—'}</div>
+        <div style="font-size:10.5px;color:var(--ink-soft);">Trend</div>
+      </div>
+    </div>`:''}
+
+    <div class="stit">✨ AI ile Soru Üret &amp; Ödevlendir</div>
+    <div class="fi">
+      <label>Konu / Konular</label>
+      <input id="aiCoachTopics" value="${autoTopics.join(', ')}" placeholder="Türev, Optik, Paragraf...">
+      <div style="font-size:11px;color:var(--ink-soft);margin-top:3px;">Zayıf konular otomatik seçildi. Düzenleyebilirsiniz.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div class="fi" style="margin:0;"><label>Soru Sayısı</label>
+        <select id="aiCoachCount"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select>
+      </div>
+      <div class="fi" style="margin:0;"><label>Zorluk</label>
+        <select id="aiCoachDiff"><option value="kolay">Kolay</option><option value="orta" selected>Orta</option><option value="zor">Zor</option></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="bp" id="aiCoachGenBtn" style="flex:1;">✨ Üret &amp; Ödevlendir</button>
+      <button class="bg" id="aiCoachPreviewBtn" style="flex:1;">👁 Önizle</button>
+    </div>
+    <div id="aiCoachGenStatus" style="display:none;background:var(--student-soft);border-radius:9px;padding:10px 13px;font-size:13px;color:var(--student);margin-bottom:14px;"></div>
+
+    <div class="stit">Geçmiş AI Test Sonuçları</div>
+    <div>${histHTML}</div>`;
+
+  $('aiCoachGenBtn').onclick=()=>aiCoachGenerate(c,true);
+  $('aiCoachPreviewBtn').onclick=()=>aiCoachGenerate(c,false);
+}
+
+async function aiCoachGenerate(c, assignToStudent){
+  const key=localStorage.getItem(AI_KEY_K)||'';
+  if(!key){alert('⚙ Ayarlar sayfasından Groq API anahtarınızı kaydedin.\n\nconsole.groq.com → API Keys → Create API Key (Ücretsiz)');return;}
+  const topics=$('aiCoachTopics').value.trim();
+  if(!topics){alert('Konu girin.');return;}
+  const count=Number($('aiCoachCount').value)||10;
+  const diff=$('aiCoachDiff').value;
+  const statusEl=$('aiCoachGenStatus');
+  statusEl.style.display='block';
+  statusEl.style.color='var(--student)';
+  statusEl.textContent='⏳ Yapay zeka '+count+' soru üretiyor...';
+  $('aiCoachGenBtn').disabled=true;
+  $('aiCoachPreviewBtn').disabled=true;
+  try{
+    const qs=await generateAiTest(topics,count,diff,key);
+    if(assignToStudent){
+      if(!c.aiTests) c.aiTests=[];
+      c.assignments.push({
+        id:Date.now(),subject:'AI Test',
+        title:'✨ AI Test: '+topics,
+        due:'',done:false,
+        note:count+' soru · '+diff+' zorluk',
+        autoAdded:true,
+        aiTest:{questions:qs,topics,count,diff,assignedDate:TODAY,assignedByCoach:true}
+      });
+      save();
+      statusEl.style.color='var(--good)';
+      statusEl.textContent='✓ '+count+' soru üretildi ve '+c.name+"'ın ödev listesine eklendi!";
+    } else {
+      statusEl.style.display='none';
+      showCoachPreview(c,qs,topics);
+    }
+  }catch(err){
+    statusEl.style.color='var(--rose)';
+    statusEl.textContent='✗ Hata: '+err.message;
+  }finally{
+    $('aiCoachGenBtn').disabled=false;
+    $('aiCoachPreviewBtn').disabled=false;
+  }
+}
+
+function showCoachPreview(c,qs,topics){
+  const wrap=$('aiCoachPanel');
+  const questHTML=qs.map((q,i)=>`
+    <div style="background:var(--cream);border-radius:10px;padding:13px 15px;margin-bottom:10px;">
+      <div style="font-weight:600;font-size:13.5px;margin-bottom:8px;">${i+1}. ${q.question}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+        ${q.options.map(o=>`<div style="font-size:12.5px;padding:6px 10px;background:${o===q.correctAnswer?'#E3EEE3':'var(--paper)'};border:1px solid ${o===q.correctAnswer?'var(--good)':'var(--line)'};border-radius:7px;color:${o===q.correctAnswer?'var(--good)':'var(--ink)'};">${o}${o===q.correctAnswer?' ✓':''}</div>`).join('')}
+      </div>
+      ${q.explanation?`<div style="font-size:12px;color:var(--ink-soft);margin-top:7px;padding-top:7px;border-top:1px solid var(--line);">💡 ${q.explanation}</div>`:''}
+    </div>`).join('');
+
+  wrap.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <h2 style="margin:0;font-family:Fraunces,serif;">Önizleme: ${topics}</h2>
+      <button class="bg" id="previewBack">← Geri</button>
+    </div>
+    <div style="background:var(--student-soft);border-radius:9px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:var(--student);">
+      ✓ ${qs.length} soru üretildi. Doğru cevaplar <b style="color:var(--good);">yeşil</b> ile işaretli.
+    </div>
+    <div style="max-height:500px;overflow-y:auto;">${questHTML}</div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="bp" id="previewAssign" style="flex:1;">📋 Ödevlendir</button>
+      <button class="bg" id="previewBack2" style="flex:1;">↺ Yeni Üret</button>
+    </div>`;
+
+  $('previewBack').onclick=()=>rAiCoachDetail();
+  $('previewBack2').onclick=()=>rAiCoachDetail();
+  $('previewAssign').onclick=()=>{
+    if(!c.aiTests) c.aiTests=[];
+    c.assignments.push({
+      id:Date.now(),subject:'AI Test',
+      title:'✨ AI Test: '+topics,
+      due:'',done:false,
+      note:qs.length+' soru · Koç tarafından oluşturuldu',
+      autoAdded:true,
+      aiTest:{questions:qs,topics,count:qs.length,assignedDate:TODAY,assignedByCoach:true}
+    });
+    save();
+    alert('✓ '+c.name+"'ın ödev listesine eklendi!");
+    rAiCoachDetail();
+  };
+}
+
+// ═══════════════════════════════════════════════════
 // DENEME YÖNETİMİ (KOÇPANELI)
 // ═══════════════════════════════════════════════════
 let examMgmtSelId = null;
@@ -1990,7 +2167,9 @@ const CNAV=[
   {id:'dashboard',l:'Genel Bakış'},{id:'clients',l:'Danışanlar'},{id:'appointments',l:'Randevular'},
   {id:'schedule',l:'Program'},{id:'assignments',l:'Ödevler'},{id:'exams',l:'Deneme Sınavları'},
   {id:'curriculum',l:'Müfredat'},{id:'videotracker',l:'Video Takibi'},{id:'mood',l:'Duygu Takibi'},
-  {id:'report',l:'Veli Raporu'},{id:'accounts',l:'Cari Hesap'},{id:'settings',l:'⚙ Ayarlar'}
+  {id:'report',l:'Veli Raporu'},{id:'accounts',l:'Cari Hesap'},
+  {id:'exam-mgmt',l:'📝 Deneme Yönetimi'},{id:'exam-analysis',l:'📊 Deneme Analizi'},
+  {id:'ai-coach',l:'🤖 AI Koç'},{id:'settings',l:'⚙ Ayarlar'}
 ];
 const SNAV=[{id:'st-dashboard',l:'Panom'},{id:'st-schedule',l:'Programım'},{id:'st-assignments',l:'Ödevlerim'},{id:'st-video',l:'Video İzleme'},{id:'st-pomodoro',l:'Kronometre'},{id:'st-aitest',l:'✨ AI Test'}];
 const PNAV=[{id:'par-dashboard',l:'Çocuğumun Durumu'}];
@@ -2012,8 +2191,9 @@ const pageMap={
   dashboard:rDash, clients:rClients, appointments:rAppts, schedule:rSched,
   assignments:rAssCoach, exams:rExamsCoach, curriculum:rCur, videotracker:rVtCoach,
   mood:rMoodCoach, report:rReport, accounts:rAccounts, settings:rSettings,
+  'exam-mgmt':rExamMgmt, 'exam-analysis':rExamAnalysis, 'ai-coach':rAiCoach,
   'st-dashboard':rStDash, 'st-schedule':rStSched, 'st-assignments':rStAssign,
-  'st-video':rStVideo, 'st-pomodoro':rPom, 'st-aitest':rAiTest,
+  'st-video':rStVideo, 'st-pomodoro':rPom, 'st-aitest':rAiTest, 'st-exam':rStExam,
   'par-dashboard':rParDash
 };
 function navTo(pg){
