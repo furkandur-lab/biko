@@ -1144,17 +1144,7 @@ window.openSchedM  = function(bid,pd,ps){ openSchedM(bid,pd,ps); };
 window.answerAi    = function(btn,a,c,e){ answerAi(btn,a,c,e); };
 window.rAiTest     = function(){ rAiTest(); };
 window.rerender    = function(){ rerender(); };
-window.swVTab      = function(t){
-  vTab=t;
-  var pl=document.getElementById('panelLocal');
-  var py=document.getElementById('panelYt');
-  var tl=document.getElementById('tabLocal');
-  var ty=document.getElementById('tabYt');
-  if(pl) pl.style.display=t==='local'?'block':'none';
-  if(py) py.style.display=t==='yt'?'block':'none';
-  if(tl){tl.style.background=t==='local'?'var(--teal)':'var(--cream)';tl.style.color=t==='local'?'#fff':'var(--ink-soft)';}
-  if(ty){ty.style.background=t==='yt'?'var(--teal)':'var(--cream)';ty.style.color=t==='yt'?'#fff':'var(--ink-soft)';}
-};
+window.swVTab = swVTab;
 
 }
 }); // end DOMContentLoaded
