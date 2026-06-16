@@ -1069,16 +1069,25 @@ async function generateAiTest(topics,count,difficulty,key){
 
 SADECE şu JSON formatında yanıt ver, başka HİÇBİR ŞEY yazma, markdown kullanma:
 {"questions":[{"question":"Soru metni","options":["A) ...","B) ...","C) ...","D) ..."],"correctAnswer":"A) ...","explanation":"Kısa açıklama"}]}`;
-  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key;
-  const resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:4000}})});
-  if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'Gemini API hatası: '+resp.status);}
-  const data=await resp.json();
-  const text=(data.candidates?.[0]?.content?.parts?.[0]?.text)||'';
-  const clean=text.replace(/```json|```/g,'').trim();
-  let parsed;
-  try{parsed=JSON.parse(clean);}catch(e){const m=clean.match(/\{[\s\S]*\}/);if(!m)throw new Error('JSON parse hatası — Gemini beklenmedik yanıt döndürdü.');parsed=JSON.parse(m[0]);}
-  if(!parsed.questions||!Array.isArray(parsed.questions))throw new Error('Geçersiz Gemini yanıtı');
-  return parsed.questions;
+  const MODELS=['gemini-1.5-flash','gemini-1.5-pro','gemini-1.0-pro','gemini-pro'];
+  const BASE='https://generativelanguage.googleapis.com/v1beta/models/';
+  let lastErr='';
+  for(const model of MODELS){
+    try{
+      const url=BASE+model+':generateContent?key='+key;
+      const resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:4000}})});
+      if(!resp.ok){const e=await resp.json();const msg=e.error?.message||'';if(msg.toLowerCase().includes('quota')||msg.toLowerCase().includes('limit')||resp.status===429||resp.status===503){lastErr=model+': '+msg;continue;}throw new Error('Gemini API hatası ('+model+'): '+msg);}
+      const data=await resp.json();
+      const text=(data.candidates?.[0]?.content?.parts?.[0]?.text)||'';
+      const clean=text.replace(/```json|```/g,'').trim();
+      let parsed;
+      try{parsed=JSON.parse(clean);}catch(e2){const m=clean.match(/\{[\s\S]*\}/);if(!m){lastErr=model+': JSON parse hatası';continue;}parsed=JSON.parse(m[0]);}
+      if(!parsed.questions||!Array.isArray(parsed.questions)){lastErr=model+': Geçersiz yanıt';continue;}
+      console.log('BİKOÇ AI: '+model+' ile '+parsed.questions.length+' soru üretildi.');
+      return parsed.questions;
+    }catch(e){lastErr=model+': '+e.message;}
+  }
+  throw new Error('Tüm Gemini modelleri kota sınırına ulaştı. Detay: '+lastErr+' | Çözüm: Google AI Studio dan yeni anahtar alın veya birkaç dakika bekleyip tekrar deneyin.');
 }
 function renderAiQ(c){
   const area=document.getElementById('aiQuizArea');if(aiQIdx>=aiTestQ.length){showAiScore(c);return;}
