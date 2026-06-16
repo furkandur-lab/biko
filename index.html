@@ -392,7 +392,15 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
         <div class="stit" style="margin-top:18px;">Koç PIN Değiştir</div>
         <div class="fi"><label>Yeni PIN (4 hane)</label><input type="password" id="newPinInput" class="mpin" maxlength="4" placeholder="••••"></div>
         <button class="bp" id="savePin">PIN Kaydet</button>
-        <div class="stit" style="margin-top:18px;">Veri Yönetimi</div>
+        <div class="stit" style="margin-top:22px;">Öğrenci &amp; Veli PIN Yönetimi</div>
+        <div class="fi"><label>Danışan Seç</label><select id="pinClientSel"></select></div>
+        <div class="fr">
+          <div class="fi"><label>Yeni Öğrenci PIN</label><input type="password" id="pinStudentNew" class="mpin" maxlength="4" placeholder="••••"></div>
+          <div class="fi"><label>Yeni Veli PIN</label><input type="password" id="pinParentNew" class="mpin" maxlength="4" placeholder="••••"></div>
+        </div>
+        <div id="pinCurrentInfo" style="font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;"></div>
+        <button class="bp" id="saveClientPins">PIN Kaydet</button>
+        <div class="stit" style="margin-top:22px;">Veri Yönetimi</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="bg" id="btnExport">⬇ Yedek İndir</button>
           <button class="bg" id="btnImport">⬆ Yedek Yükle</button>
@@ -458,6 +466,20 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
       </div>
     </div>
 
+    <div id="page-ai-coach" class="page">
+      <div class="ph">
+        <div><h1>AI Koç</h1><p>Danışan bazlı AI test oluştur, ödevlendir ve analiz et</p></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="stit">Danışan Seç</div>
+          <div id="aiCoachCL"></div>
+        </div>
+        <div class="card" id="aiCoachPanel">
+          <div class="empty">Danışan seçin</div>
+        </div>
+      </div>
+    </div>
     <div id="page-par-dashboard" class="page">
       <div class="ph"><div><h1 id="parTitle">Veli Paneli</h1><p>Salt okunur rapor görünümü</p></div></div>
       <div class="rpage" id="parRepContent"></div>
@@ -633,6 +655,7 @@ function bf(c){
    'videos','videoLogs','schedule','moodLog','pomLog'].forEach(k=>{c[k]=c[k]||[];});
   c.fee=c.fee||0; c.school=c.school||''; c.grade=c.grade||'';
   c.pin=c.pin||''; c.parentPin=c.parentPin||'';
+  c.aiTests=c.aiTests||[];
   c.videos.forEach(v=>{v.type=v.type||'yt'; if(!v.embedSrc&&v.ytId) v.embedSrc=`https://www.youtube-nocookie.com/embed/${v.ytId}?enablejsapi=1&rel=0`;});
   c.exams.forEach(ex=>ex.subjects.forEach(s=>{s.weakTopics=s.weakTopics||[];}));
   c.assignments.forEach(a=>{a.autoAdded=a.autoAdded||false;});
@@ -793,7 +816,7 @@ function parseYt(raw){
   return{ytId,embedSrc:`https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&rel=0`};
 }
 function logV(type,msg){const c=state.clients.find(x=>x.id===ytCId);if(!c)return;c.videoLogs.push({videoId:ytVId,type,msg,ts:Date.now()});save();}
-function stopVid(){if(ytInt){clearInterval(ytInt);ytInt=null;}ytCId=null;ytVId=null;ytLast=-1;}
+function stopVid(){if(ytInt){clearInterval(ytInt);ytInt=null;}if(window._ytWatchInt){clearInterval(window._ytWatchInt);window._ytWatchInt=null;}if(window._localWatchInt){clearInterval(window._localWatchInt);window._localWatchInt=null;}ytCId=null;ytVId=null;ytLast=-1;window._ytLastRate=undefined;}
 async function launchPlayer(v,cId){
   stopVid(); ytCId=cId; ytVId=v.id;
   const pw=$('ytw'); if(!pw) return;
@@ -808,12 +831,26 @@ async function launchPlayer(v,cId){
     vid.addEventListener('timeupdate',()=>{const cur=Math.floor(vid.currentTime);const d=cur-lastT;if(lastT>0&&d>3)logV('seek-fwd',`⏩ ${lastT}s→${cur}s`);else if(lastT>0&&d<-1)logV('seek-bk',`⏪ ${lastT}s→${cur}s`);if(cur>0)lastT=cur;});
     vid.addEventListener('ratechange',()=>logV('rate',`⚡ Hız ${vid.playbackRate}×`));
     vid.addEventListener('ended',()=>logV('watch','Video tamamlandı ✓'));
+    // watch time every 30s
+    let localWatchTimer=0;
+    if(window._localWatchInt) clearInterval(window._localWatchInt);
+    window._localWatchInt=setInterval(()=>{if(!vid.paused){localWatchTimer+=30;logV('watch',`▶ ${localWatchTimer}s izlendi`);}},30000);
   } else {
     const src=v.embedSrc||`https://www.youtube-nocookie.com/embed/${v.ytId}?enablejsapi=1&rel=0`;
     const iframe=document.createElement('iframe');iframe.src=src;iframe.style.cssText='width:100%;height:100%;border:none;';iframe.allow='accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture';iframe.allowFullscreen=true;
-    pw.innerHTML=''; pw.appendChild(iframe); ytLast=0;
+    pw.innerHTML=''; pw.appendChild(iframe); ytLast=0; let ytLastRate=1;
     if(ytInt) clearInterval(ytInt);
-    ytInt=setInterval(()=>{try{iframe.contentWindow.postMessage(JSON.stringify({event:'command',func:'getCurrentTime',args:''}),'*');}catch(e){}},1000);
+    ytInt=setInterval(()=>{
+      try{
+        iframe.contentWindow.postMessage(JSON.stringify({event:'listening'}),'*');
+        iframe.contentWindow.postMessage(JSON.stringify({event:'command',func:'getCurrentTime',args:[]}),'*');
+        iframe.contentWindow.postMessage(JSON.stringify({event:'command',func:'getPlaybackRate',args:[]}),'*');
+      }catch(e){}
+    },1000);
+    // Also log watch time every 30s
+    let ytWatchTimer=0;
+    if(window._ytWatchInt) clearInterval(window._ytWatchInt);
+    window._ytWatchInt=setInterval(()=>{ytWatchTimer+=30;logV('watch',`▶ ${ytWatchTimer}s izlendi`);},30000);
   }
 }
 window.addEventListener('message',ev=>{
@@ -822,6 +859,11 @@ window.addEventListener('message',ev=>{
     const data=typeof ev.data==='string'?JSON.parse(ev.data):ev.data;
     if(data&&data.event==='infoDelivery'&&data.info){const cur=Math.floor(data.info.currentTime||0);if(ytLast>=0&&cur>0){const diff=cur-ytLast;if(diff>3)logV('seek-fwd',`⏩ ${ytLast}s→${cur}s`);else if(diff<-1)logV('seek-bk',`⏪ ${ytLast}s→${cur}s`);}if(cur>0)ytLast=cur;}
     if(data&&data.event==='onPlaybackRateChange') logV('rate',`⚡ Hız ${data.info}×`);
+    if(data&&data.event==='infoDelivery'&&data.info?.playbackRate){
+      const nr=data.info.playbackRate;
+      if(nr!==window._ytLastRate&&window._ytLastRate!==undefined) logV('rate',`⚡ Hız ${window._ytLastRate}×→${nr}×`);
+      window._ytLastRate=nr;
+    }
   }catch(e){}
 });
 
@@ -897,8 +939,9 @@ SADECE şu JSON formatında yanıt ver, başka HİÇBİR ŞEY yazma, markdown ku
   throw new Error('Soru üretilemedi: '+lastErr+'\n\nGroq anahtarınızı kontrol edin: console.groq.com');
 }
 
-function renderAiQ(c){
-  const area=$('aiQuizArea'); if(aiQIdx>=aiTestQ.length){showAiScore(c);return;}
+let aiCurTopics='';
+function renderAiQ(c,topicsStr){
+  const area=$('aiQuizArea'); if(aiQIdx>=aiTestQ.length){showAiScore(c,topicsStr||aiCurTopics);return;}
   const q=aiTestQ[aiQIdx]; const pct=Math.round(aiQIdx/aiTestQ.length*100);
   area.innerHTML=`<div class="ai-prog"><div class="ai-prog-fill" style="width:${pct}%;"></div></div>
     <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:11px;">${aiQIdx+1} / ${aiTestQ.length} soru</div>
@@ -918,18 +961,35 @@ function renderAiQ(c){
     if(q.explanation){const d=document.createElement('div');d.style.cssText='font-size:12.5px;color:var(--ink-soft);margin-top:10px;padding:10px;background:var(--cream);border-radius:8px;';d.textContent='💡 '+q.explanation;document.querySelector('.ai-quiz').appendChild(d);}
     const nb=document.createElement('button');nb.className='bp';nb.style.cssText='margin-top:13px;padding:9px 20px;';
     nb.textContent=aiQIdx+1<aiTestQ.length?'Sonraki Soru →':'Sonuçları Gör ✓';
-    nb.onclick=()=>{aiQIdx++;renderAiQ(c);};
+    nb.onclick=()=>{aiQIdx++;renderAiQ(c,topicsStr);};
     document.querySelector('.ai-quiz').appendChild(nb);
   });
 }
-function showAiScore(c){
+function showAiScore(c,topicsStr,isCoachAssigned){
   const elapsed=Math.round((Date.now()-aiStart)/1000); const pct=Math.round(aiScore/aiTestQ.length*100);
-  $('aiQuizArea').innerHTML=`<div class="ai-score"><h2>${pct}%</h2><p>${aiTestQ.length} sorudan ${aiScore} doğru · ${Math.floor(elapsed/60)}dk ${elapsed%60}sn</p><p style="margin-top:8px;font-size:12px;opacity:.75;">${pct>=80?'Mükemmel! 🎉':pct>=60?'İyi iş! 💪':'Daha fazla çalış 📚'}</p></div>
-    <button class="bp" style="margin-top:14px;width:100%;padding:11px;" id="newTestBtn">Yeni Test Üret</button>`;
-  $('newTestBtn').onclick=()=>rAiTest();
+  // Save test result to client
+  if(!c.aiTests) c.aiTests=[];
+  c.aiTests.push({
+    id:Date.now(), date:TODAY, topics:topicsStr||'',
+    total:aiTestQ.length, correct:aiScore, pct,
+    elapsed, assignedByCoach:isCoachAssigned||false
+  });
+  // Mark assigned test as done if applicable
+  if(window._pendingAiAssignId){
+    const a=c.assignments.find(x=>x.id===window._pendingAiAssignId);
+    if(a){a.done=true;}
+    window._pendingAiAssignId=null;
+  }
   c.pomLog.push({ts:Date.now(),lbl:`AI Test (${pct}%)`,sec:elapsed});
   c.studyLog.push({date:TODAY,hours:Math.max(Math.round(elapsed/3600*10)/10,0.1),note:`AI Test — ${pct}% başarı`});
   save();
+  $('aiQuizArea').innerHTML=`<div class="ai-score">
+    <h2>${pct}%</h2>
+    <p>${aiTestQ.length} sorudan ${aiScore} doğru · ${Math.floor(elapsed/60)}dk ${elapsed%60}sn</p>
+    <p style="margin-top:8px;font-size:12px;opacity:.75;">${pct>=80?'Mükemmel! 🎉':pct>=60?'İyi iş! 💪':'Daha fazla çalış 📚'}</p>
+  </div>
+  <button class="bp" style="margin-top:14px;width:100%;padding:11px;" id="newTestBtn">Yeni Test Üret</button>`;
+  $('newTestBtn').onclick=()=>rAiTest();
 }
 async function startAiTest(c){
   const key=localStorage.getItem(AI_KEY_K)||'';
@@ -939,9 +999,9 @@ async function startAiTest(c){
   $('aiTestSetup').classList.add('hidden'); $('aiTestLoading').classList.remove('hidden'); $('aiQuizArea').classList.add('hidden');
   try{
     const qs=await generateAiTest(topics,count,diff,key);
-    aiTestQ=qs; aiQIdx=0; aiScore=0; aiStart=Date.now();
+    aiTestQ=qs; aiQIdx=0; aiScore=0; aiStart=Date.now(); aiCurTopics=topics;
     $('aiTestLoading').classList.add('hidden'); $('aiQuizArea').classList.remove('hidden');
-    renderAiQ(c);
+    renderAiQ(c,topics);
   }catch(e){
     $('aiTestLoading').classList.add('hidden'); $('aiTestSetup').classList.remove('hidden');
     alert('AI hatası: '+e.message);
@@ -1191,23 +1251,77 @@ function rVtCoach(){
 function rVtDetail(){
   const wrap=$('vtDetail'); const c=state.clients.find(x=>x.id===selC.vt);
   if(!c){wrap.innerHTML='<div class="empty">Danışan seçin</div>';return;}
-  let h=`<h2 style="margin:0 0 12px;font-family:Fraunces,serif;">${c.name} — Video Logları</h2>`;
+  let h=`<h2 style="margin:0 0 12px;font-family:Fraunces,serif;">${c.name} — Video Analizi</h2>`;
   if(!c.videos.length){h+='<div class="empty">Video atanmamış.</div>';wrap.innerHTML=h;return;}
   c.videos.forEach(v=>{
     const logs=c.videoLogs.filter(l=>l.videoId===v.id).sort((a,b)=>a.ts-b.ts);
     const fw=logs.filter(l=>l.type==='seek-fwd').length;
     const bk=logs.filter(l=>l.type==='seek-bk').length;
     const rt=logs.filter(l=>l.type==='rate').length;
-    h+=`<div class="ec"><div class="ehead"><div class="ename">▶ ${v.title}</div><div class="edate">${fd(v.assignedDate)}</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
-        <span style="font-size:11.5px;background:var(--cream);padding:3px 7px;border-radius:5px;">${logs.length} log</span>
-        <span style="font-size:11.5px;background:#FFF3E0;color:#E65100;padding:3px 7px;border-radius:5px;">⏩ ${fw} ileri</span>
-        <span style="font-size:11.5px;background:#E8F5E9;color:#2E7D32;padding:3px 7px;border-radius:5px;">⏪ ${bk} geri</span>
-        <span style="font-size:11.5px;background:var(--student-soft);color:var(--student);padding:3px 7px;border-radius:5px;">⚡ ${rt} hız</span>
+    const wt=logs.filter(l=>l.type==='watch');
+    // Hesapla: toplam izleme süresi (30s aralıklardan)
+    const watchedSec=wt.filter(l=>l.msg&&l.msg.includes('s izlendi')).length*30;
+    const watchMin=Math.floor(watchedSec/60);
+    const isCompleted=wt.some(l=>l.msg&&l.msg.includes('tamamlandı'));
+    // Rate değişimlerini parse et
+    const rateChanges=logs.filter(l=>l.type==='rate').map(l=>{
+      const m=l.msg.match(/(\d+\.?\d*)×/g)||[];
+      return m.length>0?m[m.length-1]:'?';
+    });
+    const used2x=rateChanges.some(r=>parseFloat(r)>=2);
+    const maxRate=rateChanges.length?Math.max(...rateChanges.map(r=>parseFloat(r)||1)):1;
+    h+=`<div class="ec" style="margin-bottom:14px;">
+      <div class="ehead">
+        <div>
+          <div class="ename">▶ ${v.title}</div>
+          <div class="edate">${fd(v.assignedDate)} · ${v.type==='local'?'Yerel video':'YouTube'}</div>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center;">
+          ${isCompleted?'<span class="tag done">✓ Tamamlandı</span>':'<span class="tag">Devam ediyor</span>'}
+          <button class="bd vt-clear-btn" data-vid="${v.id}" style="font-size:11px;">Logları Temizle</button>
+        </div>
       </div>
-      <div style="max-height:180px;overflow-y:auto;">${logs.slice(-15).map(l=>{let cls='wt',ic='▶';if(l.type==='seek-fwd'){cls='sf';ic='⏩';}else if(l.type==='seek-bk'){cls='sb2';ic='⏪';}else if(l.type==='rate'){cls='rt';ic='⚡';}return`<div class="le ${cls}">${ic} ${new Date(l.ts).toLocaleString('tr-TR')} — ${l.msg}</div>`;}).join('')||'<div style="font-size:12px;color:var(--ink-soft);">Log yok.</div>'}</div></div>`;
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0;">
+        <div style="background:#F5F9F8;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:var(--teal-deep);">${watchedSec>0?watchMin+'dk':'—'}</div>
+          <div style="font-size:10.5px;color:var(--ink-soft);margin-top:2px;">İzleme Süresi</div>
+        </div>
+        <div style="background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#E65100;">${fw}</div>
+          <div style="font-size:10.5px;color:var(--ink-soft);margin-top:2px;">⏩ İleri Sarma</div>
+        </div>
+        <div style="background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#2E7D32;">${bk}</div>
+          <div style="font-size:10.5px;color:var(--ink-soft);margin-top:2px;">⏪ Geri Sarma</div>
+        </div>
+        <div style="background:var(--student-soft);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:var(--student);">${maxRate>1?maxRate+'×':'—'}</div>
+          <div style="font-size:10.5px;color:var(--ink-soft);margin-top:2px;">Maks Hız</div>
+        </div>
+      </div>
+      ${used2x?'<div style="background:#FFF3E0;border-radius:7px;padding:7px 11px;font-size:12px;color:#E65100;margin-bottom:8px;">⚡ Bu öğrenci videoyu <b>2× veya daha hızlı</b> izledi.</div>':''}
+      ${fw>3?'<div style="background:var(--rose-soft);border-radius:7px;padding:7px 11px;font-size:12px;color:var(--rose);margin-bottom:8px;">⏩ <b>${fw} ileri sarma</b> — bazı bölümler atlanmış olabilir.</div>':''}
+      <div style="font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;">Log Detayı</div>
+      <div style="max-height:160px;overflow-y:auto;background:var(--cream);border-radius:8px;padding:8px;">${logs.length?logs.slice(-20).map(l=>{
+        let cls='wt',ic='▶';
+        if(l.type==='seek-fwd'){cls='sf';ic='⏩';}
+        else if(l.type==='seek-bk'){cls='sb2';ic='⏪';}
+        else if(l.type==='rate'){cls='rt';ic='⚡';}
+        return`<div class="le ${cls}" style="margin-bottom:2px;">${ic} <span style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--ink-soft);">${new Date(l.ts).toLocaleTimeString('tr-TR')}</span> ${l.msg}</div>`;
+      }).join(''):'<div style="font-size:12px;color:var(--ink-soft);">Henüz log yok.</div>'}</div>
+    </div>`;
   });
   wrap.innerHTML=h;
+  // Log temizleme
+  wrap.querySelectorAll('.vt-clear-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      const vid=Number(btn.dataset.vid);
+      if(confirm('Bu videoya ait tüm loglar silinsin mi?')){
+        c.videoLogs=c.videoLogs.filter(l=>l.videoId!==vid);
+        save(); rVtDetail();
+      }
+    };
+  });
 }
 
 function rMoodCoach(){
@@ -1284,6 +1398,15 @@ function rAccDetail(){
 function rSettings(){
   $('aiKeyInput').value=localStorage.getItem(AI_KEY_K)||'';
   $('newPinInput').value='';
+  // Populate client PIN selector
+  const sel=$('pinClientSel');
+  sel.innerHTML=state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  function updatePinInfo(){
+    const c=state.clients.find(x=>x.id===Number(sel.value));
+    if(c) $('pinCurrentInfo').textContent='Mevcut — Öğrenci PIN: '+c.pin+' · Veli PIN: '+c.parentPin;
+  }
+  updatePinInfo();
+  sel.onchange=()=>{updatePinInfo(); $('pinStudentNew').value=''; $('pinParentNew').value='';};
 }
 
 // ═══ STUDENT RENDERS ═══
@@ -1314,8 +1437,48 @@ function drawStSch(c){drawLeg(c,'stSchedLeg');if(stSchedView==='weekly')drawWG(c
 function rStAssign(){
   const c=getAC(); const wrap=$('stAssCard');
   const sorted=[...c.assignments].sort((a,b)=>(a.done-b.done)||(a.due||'').localeCompare(b.due||''));
-  wrap.innerHTML=sorted.length?sorted.map(a=>{const late=!a.done&&a.due&&a.due<TODAY;return`<div class="asrow"><div class="asch ${a.done?'done':''} st-ass-chk2" data-id="${a.id}">${a.done?'✓':''}</div><div style="flex:1;"><div class="astit ${a.done?'done':''}">${a.title} ${a.autoAdded?'<span class="tag auto">Otomatik</span>':''}</div><div class="asmeta">${a.subject}${a.note?' · '+a.note:''}</div></div><div class="pill ${late?'late':''}">${a.due?fds(a.due):''}${late?' Gecikti':''}</div></div>`;}).join(''):'<div class="empty">Henüz ödev yok.</div>';
-  wrap.onclick=ev=>{const chk=ev.target.closest('.st-ass-chk2');if(!chk)return;const a=c.assignments.find(x=>x.id===Number(chk.dataset.id));if(a){a.done=!a.done;rerender();}};
+  if(!sorted.length){wrap.innerHTML='<div class="empty">Henüz ödev yok.</div>';return;}
+  wrap.innerHTML=sorted.map(a=>{
+    const late=!a.done&&a.due&&a.due<TODAY;
+    const isAiTest=!a.done&&a.aiTest&&a.aiTest.questions&&a.aiTest.questions.length>0;
+    return`<div class="asrow">
+      <div class="asch ${a.done?'done':''} st-ass-chk2" data-id="${a.id}">${a.done?'✓':''}</div>
+      <div style="flex:1;">
+        <div class="astit ${a.done?'done':''}">${a.title} ${a.autoAdded?'<span class="tag auto">Otomatik</span>':''}</div>
+        <div class="asmeta">${a.subject}${a.note?' · '+a.note:''}</div>
+      </div>
+      <div class="pill ${late?'late':''}">${a.due?fds(a.due):''}${late?' Gecikti':''}</div>
+      ${isAiTest?`<button class="bp st-ai-solve-btn" data-id="${a.id}" style="padding:5px 11px;font-size:12px;background:var(--student);">✨ Çöz</button>`:''}
+    </div>`;
+  }).join('');
+  // Event delegation
+  wrap.onclick=ev=>{
+    const chk=ev.target.closest('.st-ass-chk2');
+    if(chk){const a=c.assignments.find(x=>x.id===Number(chk.dataset.id));if(a){a.done=!a.done;rerender();}return;}
+    const solve=ev.target.closest('.st-ai-solve-btn');
+    if(solve){
+      const a=c.assignments.find(x=>x.id===Number(solve.dataset.id));
+      if(a&&a.aiTest){startAssignedAiTest(c,a);}
+    }
+  };
+}
+
+function startAssignedAiTest(c,assignment){
+  // AI test ödevi çözme - navTo st-aitest ile aynı arayüz
+  aiTestQ=assignment.aiTest.questions;
+  aiQIdx=0; aiScore=0; aiStart=Date.now();
+  aiCurTopics=assignment.aiTest.topics||'';
+  navTo('st-aitest');
+  // Setup UI
+  $('aiTestSetup').classList.add('hidden');
+  $('aiTestLoading').classList.add('hidden');
+  $('aiQuizArea').classList.remove('hidden');
+  renderAiQ(c,aiCurTopics);
+  // Mark assignment done when score is shown
+  const origShow=showAiScore;
+  const assignId=assignment.id;
+  // Override showAiScore once to mark done
+  window._pendingAiAssignId=assignId;
 }
 function rStVideo(){
   const c=getAC(); const lw=$('stVList'); const pw=$('stVPlayer');
@@ -1354,12 +1517,198 @@ function rParDash(){
   $('parRepContent').innerHTML=buildRepHTML(c);
 }
 
+// ═══ AI COACH PAGE ═══
+let aiCoachSelId = null;
+
+function rAiCoach(){
+  const list=$('aiCoachCL'); list.innerHTML='';
+  state.clients.forEach(c=>{
+    const d=document.createElement('div'); d.className='ci'+(c.id===aiCoachSelId?' active':'');
+    const testCnt=(c.aiTests||[]).length;
+    d.innerHTML=`<div class="av">${ini(c.name)}</div><div><div class="cn">${c.name}</div><div class="cs">${testCnt} test sonucu</div></div>`;
+    d.onclick=()=>{aiCoachSelId=c.id; rAiCoach(); rAiCoachDetail();};
+    list.appendChild(d);
+  });
+  rAiCoachDetail();
+}
+
+function rAiCoachDetail(){
+  const wrap=$('aiCoachPanel');
+  const c=state.clients.find(x=>x.id===aiCoachSelId);
+  if(!c){wrap.innerHTML='<div class="empty">Danışan seçin</div>';return;}
+
+  // Zayıf konular otomatik tespiti
+  const te={};
+  c.exams.forEach(ex=>ex.subjects.forEach(s=>(s.weakTopics||[]).forEach(t=>{
+    const k=s.name+': '+t; te[k]=(te[k]||0)+1;
+  })));
+  const autoTopics=Object.entries(te).sort((a,b)=>b[1]-a[1]).map(([k])=>k).slice(0,3);
+
+  // Geçmiş test sonuçları
+  const tests=(c.aiTests||[]).slice().reverse();
+  const histHTML=tests.length?tests.map(t=>{
+    const badge=t.pct>=80?'done':t.pct>=60?'auto':'';
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);">
+      <div>
+        <div style="font-weight:600;font-size:13px;">${t.topics||'Genel Konular'}</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);">${fd(t.date)} · ${t.total} soru · ${Math.floor(t.elapsed/60)}dk ${t.elapsed%60}sn${t.assignedByCoach?' · <span class="tag auto">Koç Ödevi</span>':''}</div>
+      </div>
+      <div style="text-align:right;">
+        <span class="tag ${badge}" style="font-size:13px;padding:4px 10px;">${t.pct}%</span>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">${t.correct}/${t.total} doğru</div>
+      </div>
+    </div>`;
+  }).join(''):'<div style="font-size:13px;color:var(--ink-soft);padding:10px 0;">Henüz test çözülmemiş.</div>';
+
+  // İstatistik
+  let avgPct=0;
+  if(tests.length){avgPct=Math.round(tests.reduce((s,t)=>s+t.pct,0)/tests.length);}
+  const trend=tests.length>=2?(tests[0].pct>tests[1].pct?'📈 Yükseliş':'📉 Düşüş'):'';
+
+  wrap.innerHTML=`
+    <h2 style="margin:0 0 14px;font-family:Fraunces,serif;">${c.name} — AI Koç</h2>
+
+    ${tests.length?`<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:100px;background:var(--student-soft);border-radius:10px;padding:12px 14px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--student);">${avgPct}%</div>
+        <div style="font-size:11px;color:var(--ink-soft);">Ortalama</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:var(--cream);border-radius:10px;padding:12px 14px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--teal-deep);">${tests.length}</div>
+        <div style="font-size:11px;color:var(--ink-soft);">Test Sayısı</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:var(--cream);border-radius:10px;padding:12px 14px;text-align:center;">
+        <div style="font-size:18px;font-weight:700;color:var(--teal-deep);">${trend||'—'}</div>
+        <div style="font-size:11px;color:var(--ink-soft);">Trend</div>
+      </div>
+    </div>`:''}
+
+    <div class="stit">Koç Tarafından Test Oluştur &amp; Ödevlendir</div>
+    <div class="fi">
+      <label>Konu / Konular</label>
+      <input id="aiCoachTopics" value="${autoTopics.join(', ')}" placeholder="Türev, Optik, Paragraf...">
+      <div style="font-size:11px;color:var(--ink-soft);margin-top:3px;">Zayıf konular otomatik seçildi. Düzenleyebilirsiniz.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div class="fi" style="margin:0;"><label>Soru Sayısı</label>
+        <select id="aiCoachCount"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select>
+      </div>
+      <div class="fi" style="margin:0;"><label>Zorluk</label>
+        <select id="aiCoachDiff"><option value="kolay">Kolay</option><option value="orta" selected>Orta</option><option value="zor">Zor</option></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
+      <button class="bp" id="aiCoachGenBtn" style="flex:1;">✨ Test Oluştur &amp; Ödevlendir</button>
+      <button class="bg" id="aiCoachPreviewBtn" style="flex:1;">👁 Önizle (Koça Göster)</button>
+    </div>
+    <div id="aiCoachGenStatus" style="display:none;" class="spbox">⏳ Sorular üretiliyor...</div>
+
+    <div class="stit" style="margin-top:6px;">Geçmiş Test Sonuçları</div>
+    <div id="aiCoachHistory">${histHTML}</div>`;
+
+  // Buton bağlamaları
+  $('aiCoachGenBtn').onclick=()=>aiCoachGenerate(c,true);
+  $('aiCoachPreviewBtn').onclick=()=>aiCoachGenerate(c,false);
+}
+
+async function aiCoachGenerate(c,assignToStudent){
+  const key=localStorage.getItem(AI_KEY_K)||'';
+  if(!key){alert('⚙ Ayarlar sayfasından Groq API anahtarınızı kaydedin.');return;}
+  const topics=$('aiCoachTopics').value.trim();
+  if(!topics){alert('Konu girin.');return;}
+  const count=Number($('aiCoachCount').value)||10;
+  const diff=$('aiCoachDiff').value;
+
+  const statusEl=$('aiCoachGenStatus');
+  statusEl.style.display='block';
+  statusEl.textContent='⏳ Yapay zeka '+count+' soru üretiyor...';
+  $('aiCoachGenBtn').disabled=true;
+  $('aiCoachPreviewBtn').disabled=true;
+
+  try{
+    const qs=await generateAiTest(topics,count,diff,key);
+
+    if(assignToStudent){
+      // Öğrencinin aiTests kuyruğuna ekle (çözmeyi bekliyor)
+      if(!c.aiTests) c.aiTests=[];
+      // Assignment olarak da ekle
+      c.assignments.push({
+        id:Date.now(),
+        subject:'AI Test',
+        title:'✨ AI Test: '+topics,
+        due:'',
+        done:false,
+        note:count+' soru · '+diff+' zorluk',
+        autoAdded:true,
+        aiTest:{questions:qs, topics, count, diff, assignedDate:TODAY, assignedByCoach:true}
+      });
+      save();
+      statusEl.style.color='var(--good)';
+      statusEl.textContent='✓ '+count+' soru üretildi ve '+c.name+"'ın ödev listesine eklendi!";
+      alert('✓ Test oluşturuldu!\n\n'+c.name+"'ın ödev listesine \"✨ AI Test: "+topics+'" olarak eklendi.\nÖğrenci girişinde "Ödevlerim" sayfasında görecek.');
+    } else {
+      // Koç önizlemesi - modal benzeri gösterim
+      statusEl.style.display='none';
+      showCoachPreview(c,qs,topics);
+    }
+  }catch(err){
+    statusEl.style.color='var(--rose)';
+    statusEl.textContent='✗ Hata: '+err.message;
+  }finally{
+    $('aiCoachGenBtn').disabled=false;
+    $('aiCoachPreviewBtn').disabled=false;
+  }
+}
+
+function showCoachPreview(c,qs,topics){
+  const wrap=$('aiCoachPanel');
+  const questHTML=qs.map((q,i)=>`
+    <div style="background:var(--cream);border-radius:10px;padding:13px 15px;margin-bottom:10px;">
+      <div style="font-weight:600;font-size:13.5px;margin-bottom:8px;">${i+1}. ${q.question}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+        ${q.options.map(o=>`<div style="font-size:12.5px;padding:6px 10px;background:${o===q.correctAnswer?'#E3EEE3':'var(--paper)'};border:1px solid ${o===q.correctAnswer?'var(--good)':'var(--line)'};border-radius:7px;color:${o===q.correctAnswer?'var(--good)':'var(--ink)'};">${o}${o===q.correctAnswer?' ✓':''}</div>`).join('')}
+      </div>
+      ${q.explanation?`<div style="font-size:12px;color:var(--ink-soft);margin-top:7px;padding-top:7px;border-top:1px solid var(--line);">💡 ${q.explanation}</div>`:''}
+    </div>`).join('');
+
+  wrap.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h2 style="margin:0;font-family:Fraunces,serif;">Önizleme: ${topics}</h2>
+      <button class="bg" id="previewBack">← Geri</button>
+    </div>
+    <div style="background:var(--student-soft);border-radius:9px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:var(--student);">
+      ✓ ${qs.length} soru üretildi. Cevaplar <b>yeşil</b> ile işaretli.
+    </div>
+    <div style="max-height:520px;overflow-y:auto;">${questHTML}</div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="bp" id="previewAssign" style="flex:1;">📋 Ödevlendir</button>
+      <button class="bg" id="previewBack2">↺ Yeni Üret</button>
+    </div>`;
+
+  $('previewBack').onclick=()=>rAiCoachDetail();
+  $('previewBack2').onclick=()=>rAiCoachDetail();
+  $('previewAssign').onclick=()=>{
+    if(!c.aiTests) c.aiTests=[];
+    c.assignments.push({
+      id:Date.now(),subject:'AI Test',
+      title:'✨ AI Test: '+topics,
+      due:'',done:false,
+      note:qs.length+' soru · Koç tarafından oluşturuldu',
+      autoAdded:true,
+      aiTest:{questions:qs,topics,count:qs.length,assignedDate:TODAY,assignedByCoach:true}
+    });
+    save();
+    alert('✓ '+c.name+"'ın ödev listesine eklendi!");
+    rAiCoachDetail();
+  };
+}
+
 // ═══ SIDEBAR & NAVIGATION ═══
 const CNAV=[
   {id:'dashboard',l:'Genel Bakış'},{id:'clients',l:'Danışanlar'},{id:'appointments',l:'Randevular'},
   {id:'schedule',l:'Program'},{id:'assignments',l:'Ödevler'},{id:'exams',l:'Deneme Sınavları'},
   {id:'curriculum',l:'Müfredat'},{id:'videotracker',l:'Video Takibi'},{id:'mood',l:'Duygu Takibi'},
-  {id:'report',l:'Veli Raporu'},{id:'accounts',l:'Cari Hesap'},{id:'settings',l:'⚙ Ayarlar'}
+  {id:'report',l:'Veli Raporu'},{id:'accounts',l:'Cari Hesap'},{id:'ai-coach',l:'🤖 AI Koç'},{id:'settings',l:'⚙ Ayarlar'}
 ];
 const SNAV=[{id:'st-dashboard',l:'Panom'},{id:'st-schedule',l:'Programım'},{id:'st-assignments',l:'Ödevlerim'},{id:'st-video',l:'Video İzleme'},{id:'st-pomodoro',l:'Kronometre'},{id:'st-aitest',l:'✨ AI Test'}];
 const PNAV=[{id:'par-dashboard',l:'Çocuğumun Durumu'}];
@@ -1378,6 +1727,7 @@ function buildSidebar(){
 }
 
 const pageMap={
+  'ai-coach':rAiCoach,
   dashboard:rDash, clients:rClients, appointments:rAppts, schedule:rSched,
   assignments:rAssCoach, exams:rExamsCoach, curriculum:rCur, videotracker:rVtCoach,
   mood:rMoodCoach, report:rReport, accounts:rAccounts, settings:rSettings,
@@ -1511,7 +1861,20 @@ function bindAll(){
   };
   // SETTINGS
   $('saveAiKey').onclick=()=>{localStorage.setItem(AI_KEY_K,$('aiKeyInput').value.trim());state.aiApiKey=$('aiKeyInput').value.trim();alert('Groq API anahtarı kaydedildi.');};
-  $('savePin').onclick=()=>{const np=$('newPinInput').value.trim();if(np.length!==4||!/^\d+$/.test(np)){alert('4 haneli sayısal PIN girin.');return;}localStorage.setItem(COACH_PIN_K,np);$('newPinInput').value='';alert('PIN değiştirildi.');};
+  $('savePin').onclick=()=>{const np=$('newPinInput').value.trim();if(np.length!==4||!/^\d+$/.test(np)){alert('4 haneli sayısal PIN girin.');return;}localStorage.setItem(COACH_PIN_K,np);$('newPinInput').value='';alert('PIN değiştirildi.');}
+  $('saveClientPins').onclick=()=>{
+    const c=state.clients.find(x=>x.id===Number($('pinClientSel').value));
+    if(!c){alert('Danışan seçin.');return;}
+    const sp=$('pinStudentNew').value.trim();
+    const pp=$('pinParentNew').value.trim();
+    if(!sp&&!pp){alert('En az bir PIN girin.');return;}
+    if(sp){if(sp.length!==4||!/^\d+$/.test(sp)){alert('Öğrenci PIN 4 haneli sayı olmalı.');return;}c.pin=sp;}
+    if(pp){if(pp.length!==4||!/^\d+$/.test(pp)){alert('Veli PIN 4 haneli sayı olmalı.');return;}c.parentPin=pp;}
+    save();
+    $('pinStudentNew').value=''; $('pinParentNew').value='';
+    alert(c.name+' PIN güncellendi.\n\nÖğrenci: '+(sp||c.pin)+' · Veli: '+(pp||c.parentPin));
+    rSettings();
+  };;
   $('btnExport').onclick=doExport;
   $('btnImport').onclick=()=>$('importFile').click();
   $('importFile').onchange=doImport;
