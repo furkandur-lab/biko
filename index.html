@@ -544,8 +544,9 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
     </div>
   </div>
 </div>
-<script defer>
+<script>
 'use strict';
+document.addEventListener('DOMContentLoaded',function(){
 const TODAY=new Date().toISOString().slice(0,10);
 const SK='bikoc_v4';
 const COACH_PIN_KEY='bikoc_coach_pin';
@@ -1134,6 +1135,22 @@ function doLogout(){stopVid();if(pomInt){clearInterval(pomInt);pomInt=null;pomRu
 
 openIDB().catch(()=>console.warn('IndexedDB kullanılamıyor.'));
 
+// expose to global scope for inline onclick handlers
+window.closeM     = function(id){ document.getElementById(id).classList.add('hidden'); };
+window.swVTab     = function(t){ 
+  vTab=t;
+  document.getElementById('panelLocal').style.display=t==='local'?'block':'none';
+  document.getElementById('panelYt').style.display=t==='yt'?'block':'none';
+  var tl=document.getElementById('tabLocal');var ty=document.getElementById('tabYt');
+  tl.style.background=t==='local'?'var(--teal)':'var(--cream)';tl.style.color=t==='local'?'#fff':'var(--ink-soft)';
+  ty.style.background=t==='yt'?'var(--teal)':'var(--cream)';ty.style.color=t==='yt'?'#fff':'var(--ink-soft)';
+};
+window.openSchedM = function(bid,pd,ps){ openSchedM(bid,pd,ps); };
+window.answerAi   = function(btn,a,c,e){ answerAi(btn,a,c,e); };
+window.rAiTest    = function(){ rAiTest(); };
+window.rerender   = function(){ rerender(); };
+
+}); // end DOMContentLoaded
 </script>
 </body>
 </html>
