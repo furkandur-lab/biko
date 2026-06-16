@@ -924,27 +924,115 @@ async function launchPlayer(v,cId){
       if(!vid.paused&&!vid.ended){localWatchSec+=30;logV('watch',localWatchSec+'s izlendi');}
     },30000);
   } else {
-    const src=v.embedSrc||`https://www.youtube-nocookie.com/embed/${v.ytId}?enablejsapi=1&rel=0`;
-    const iframe=document.createElement('iframe');iframe.src=src;iframe.style.cssText='width:100%;height:100%;border:none;';iframe.allow='accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture';iframe.allowFullscreen=true;
-    pw.innerHTML=''; pw.appendChild(iframe); ytLast=0;
+    // YouTube: embed URL'ye origin + enablejsapi ekle
+    const ytId = v.ytId || (v.embedSrc&&v.embedSrc.match(/embed\/([A-Za-z0-9_-]{11})/)||[])[1];
+    const origin = window.location.origin||'https://furkandur-lab.github.io';
+    const src = `https://www.youtube.com/embed/${ytId}?enablejsapi=1&rel=0&origin=${encodeURIComponent(origin)}`;
+    const pw2 = pw; // closure
+    pw2.innerHTML='';
+
+    // Wrapper div (tam boyut)
+    const wrap2=document.createElement('div');
+    wrap2.style.cssText='position:relative;width:100%;height:100%;';
+    pw2.appendChild(wrap2);
+
+    const iframe=document.createElement('iframe');
+    iframe.src=src;
+    iframe.style.cssText='width:100%;height:100%;border:none;';
+    iframe.allow='accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share';
+    iframe.allowFullscreen=true;
+    wrap2.appendChild(iframe);
+
+    ytLast=0; window._ytLastRate=1;
     if(ytInt) clearInterval(ytInt);
-    ytInt=setInterval(()=>{try{iframe.contentWindow.postMessage(JSON.stringify({event:'command',func:'getCurrentTime',args:[]}),'*');}catch(e){}},1000);
-    // 30 saniyede bir izleme logu
-    let ytWatchSec=0;
     if(window._ytWatchInt) clearInterval(window._ytWatchInt);
-    window._ytWatchInt=setInterval(()=>{ytWatchSec+=30;logV('watch',ytWatchSec+'s izlendi');},30000);
+
+    // Iframe yüklenince YT Player API'yi başlat
+    iframe.onload=()=>{
+      // YT Player API'ye subscribe ol
+      try{
+        iframe.contentWindow.postMessage(JSON.stringify({
+          event:'listening', id:1, channel:'widget'
+        }),'*');
+        iframe.contentWindow.postMessage(JSON.stringify({
+          event:'command', func:'addEventListener',
+          args:['onStateChange'], id:1, channel:'widget'
+        }),'*');
+      }catch(e){}
+    };
+
+    // Her saniye getCurrentTime sorgula (polling)
+    ytInt=setInterval(()=>{
+      try{
+        iframe.contentWindow.postMessage(JSON.stringify({
+          event:'command', func:'getCurrentTime', args:[], id:1, channel:'widget'
+        }),'*');
+        iframe.contentWindow.postMessage(JSON.stringify({
+          event:'command', func:'getPlaybackRate', args:[], id:1, channel:'widget'
+        }),'*');
+      }catch(e){}
+    },1500);
+
+    // 30 saniyede bir izleme logu (player duraklamamışsa)
+    let ytWatchSec=0;
+    window._ytWatchInt=setInterval(()=>{
+      ytWatchSec+=30;
+      logV('watch',ytWatchSec+'s izlendi');
+    },30000);
+
+    logV('watch','YouTube video açıldı: '+v.title);
   }
 }
 window.addEventListener('message',ev=>{
   if(!ytCId) return;
   try{
-    const data=typeof ev.data==='string'?JSON.parse(ev.data):ev.data;
-    if(data&&data.event==='infoDelivery'&&data.info){const cur=Math.floor(data.info.currentTime||0);if(ytLast>=0&&cur>0){const diff=cur-ytLast;if(diff>3)logV('seek-fwd',`⏩ ${ytLast}s→${cur}s`);else if(diff<-1)logV('seek-bk',`⏪ ${ytLast}s→${cur}s`);}if(cur>0)ytLast=cur;}
-    if(data&&data.event==='onPlaybackRateChange') logV('rate','⚡ Hız '+data.info+'× yapıldı');
-    if(data&&data.event==='infoDelivery'&&data.info&&data.info.playbackRate!==undefined){
-      const nr=data.info.playbackRate;
-      if(window._ytLastRate!==undefined&&nr!==window._ytLastRate) logV('rate','⚡ Hız '+window._ytLastRate+'×→'+nr+'×');
+    const raw=ev.data;
+    const data=typeof raw==='string'?JSON.parse(raw):raw;
+    if(!data) return;
+
+    // infoDelivery - getCurrentTime yanıtı
+    if(data.event==='infoDelivery'&&data.info){
+      const info=data.info;
+      // Pozisyon takibi (seek tespiti)
+      if(info.currentTime!==undefined){
+        const cur=Math.floor(info.currentTime);
+        if(ytLast>=0&&cur>0){
+          const diff=cur-ytLast;
+          if(diff>5)  logV('seek-fwd','⏩ '+ytLast+'s → '+cur+'s ileri sardı (+'+diff+'s)');
+          else if(diff<-2) logV('seek-bk','⏪ '+ytLast+'s → '+cur+'s geri sardı');
+        }
+        if(cur>0) ytLast=cur;
+      }
+      // Hız takibi
+      if(info.playbackRate!==undefined){
+        const nr=info.playbackRate;
+        if(window._ytLastRate!==undefined&&nr!==window._ytLastRate){
+          logV('rate','⚡ Hız '+window._ytLastRate+'× → '+nr+'× değişti');
+        }
+        window._ytLastRate=nr;
+      }
+      // Durum takibi (1=oynuyor, 2=durakladı, 0=bitti)
+      if(info.playerState!==undefined){
+        if(info.playerState===0) logV('watch','▶ Video bitti (tam izlendi)');
+        if(info.playerState===2) logV('watch','⏸ Duraklatıldı ('+ytLast+'s)');
+      }
+    }
+
+    // onPlaybackRateChange event
+    if(data.event==='onPlaybackRateChange'&&data.info!==undefined){
+      const nr=data.info;
+      if(window._ytLastRate!==undefined&&nr!==window._ytLastRate){
+        logV('rate','⚡ Hız '+window._ytLastRate+'× → '+nr+'× değişti');
+      }
       window._ytLastRate=nr;
+    }
+
+    // onStateChange
+    if(data.event==='onStateChange'){
+      const st=data.info;
+      if(st===0) logV('watch','✓ Video tamamlandı');
+      if(st===2) logV('watch','⏸ Duraklatıldı');
+      if(st===1 && ytLast>0) logV('watch','▶ Devam etti ('+ytLast+'s)');
     }
   }catch(e){}
 });
@@ -1329,11 +1417,12 @@ function rVtDetail(){
     const rt   = logs.filter(l=>l.type==='rate').length;
     const wt   = logs.filter(l=>l.type==='watch');
 
-    // İzleme süresi: "X s izlendi" loglarından topla
-    const watchSecs = wt.reduce((sum,l)=>{
+    // İzleme süresi: "Xs izlendi" loglarından en büyük değeri al (kümülatif log)
+    const watchSecVals = wt.map(l=>{
       const m=l.msg&&l.msg.match(/(\d+)s izlendi/);
-      return sum+(m?Number(m[1]):0);
-    },0);
+      return m?Number(m[1]):0;
+    }).filter(x=>x>0);
+    const watchSecs = watchSecVals.length ? Math.max(...watchSecVals) : 0;
     const watchMin  = Math.floor(watchSecs/60);
     const watchSec2 = watchSecs%60;
     const completed = wt.some(l=>l.msg&&l.msg.includes('tamamlandı'));
@@ -1803,7 +1892,7 @@ function rExamMgmtDetail(){
     <div class="stit" style="margin-top:16px;">Soru Kaynağı</div>
     <div style="display:flex;gap:0;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:14px;">
       <div id="emTabAI" onclick="emSwTab('ai')" style="flex:1;padding:9px;text-align:center;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--teal);color:#fff;">✨ AI ile Üret</div>
-      <div id="emTabManual" onclick="emSwTab('manual')" style="flex:1;padding:9px;text-align:center;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--cream);color:var(--ink-soft);">📂 Manuel Yükle</div>
+      <div id="emTabManual" onclick="emSwTab('manual')" style="flex:1;padding:9px;text-align:center;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--cream);color:var(--ink-soft);">📄 PDF Yükle</div>
     </div>
 
     <div id="emPanelAI">
@@ -1815,13 +1904,22 @@ function rExamMgmtDetail(){
     </div>
 
     <div id="emPanelManual" style="display:none;">
-      <div style="background:var(--cream);border-radius:9px;padding:12px;margin-bottom:10px;font-size:12.5px;">
-        <b>JSON formatında sorular yapıştırın:</b><br>
-        <code style="font-size:11px;">[{"question":"...","options":["A)...","B)...","C)...","D)..."],"correctAnswer":"A)...","explanation":"..."}]</code>
+      <div style="background:var(--student-soft);border-radius:9px;padding:12px;margin-bottom:12px;font-size:12.5px;border:1px solid var(--student);">
+        <b>📄 PDF Deneme Yükle</b> — Yapay zeka soruları otomatik olarak okuyup çıkarır.<br>
+        <span style="font-size:11px;color:var(--ink-soft);">Not: Anthropic API anahtarı gereklidir (Ayarlar sayfası). Groq anahtarı da çalışır.</span>
       </div>
-      <div class="fi"><label>JSON Yapıştır</label><textarea id="emManualJSON" rows="5" placeholder='[{"question":"...","options":["A)..."],"correctAnswer":"A)..."}]'></textarea></div>
-      <button class="bg" id="emParseBtn" style="margin-bottom:10px;">✓ Soruları Kontrol Et</button>
+      <div class="fi">
+        <label>PDF Dosyası Seç</label>
+        <input type="file" id="emPdfFile" accept="application/pdf,.pdf" style="padding:8px;">
+      </div>
+      <div id="emPdfPreview" style="display:none;background:var(--cream);border-radius:9px;padding:10px;margin-bottom:10px;font-size:12.5px;">
+        <span id="emPdfName"></span>
+      </div>
+      <button class="bp" id="emParsePdfBtn" style="margin-bottom:10px;width:100%;padding:11px;">
+        🤖 PDF'den Soruları Çıkar
+      </button>
       <div id="emParseStatus"></div>
+      <div id="emParsedPreview" style="display:none;margin-top:10px;"></div>
     </div>
 
     <div id="emStatus" style="display:none;" class="spbox">⏳ Sorular hazırlanıyor...</div>
@@ -1832,6 +1930,21 @@ function rExamMgmtDetail(){
 
   $('examAllStudents').onchange=()=>rExamMgmtDetail();
   $('emCreateBtn').onclick=()=>emCreate(allSel,c);
+
+  // PDF dosya seçimi önizleme
+  if($('emPdfFile')){
+    $('emPdfFile').onchange=()=>{
+      const file=$('emPdfFile').files[0];
+      if(!file) return;
+      $('emPdfName').textContent=file.name;
+      $('emPdfSize').textContent=(file.size/1024/1024).toFixed(2)+' MB';
+      $('emPdfPreview').style.display='block';
+      $('emParsedPreview').style.display='none';
+      $('emParseStatus').innerHTML='';
+      manualQuestions=[];
+    };
+    $('emParsePdfBtn').onclick=()=>parsePdfWithAI();
+  }
 
   $('emParseBtn').onclick=()=>{
     try{
@@ -1848,6 +1961,175 @@ function rExamMgmtDetail(){
 }
 
 let emActiveTab='ai';
+// ═══ PDF → AI SORU ÇIKARMA ═══
+async function parsePdfWithAI(){
+  const file=$('emPdfFile').files[0];
+  if(!file){alert('Önce bir PDF dosyası seçin.');return;}
+
+  const key=localStorage.getItem(AI_KEY_K)||'';
+  if(!key){
+    alert('Groq API anahtarı gerekli.\n\n⚙ Ayarlar sayfasından ekleyin.\nÜcretsiz: console.groq.com → API Keys');
+    return;
+  }
+
+  const statusEl=$('emParseStatus');
+  const previewEl=$('emParsedPreview');
+  statusEl.innerHTML='<div class="spbox">⏳ PDF okunuyor...</div>';
+  previewEl.style.display='none';
+  $('emParsePdfBtn').disabled=true;
+  manualQuestions=[];
+
+  try{
+    // ── Adım 1: PDF'yi metin olarak oku (FileReader + PDF.js yok, base64 Groq'a gönder) ──
+    statusEl.innerHTML='<div class="spbox">📄 PDF metni çıkarılıyor...</div>';
+    const pdfText = await extractPdfText(file);
+
+    if(!pdfText||pdfText.length<50){
+      throw new Error('PDF\'den metin çıkarılamadı. PDF taranmış (görsel) olabilir — metin bazlı PDF kullanın.');
+    }
+
+    statusEl.innerHTML='<div class="spbox">🤖 AI soruları analiz ediyor... ('+(pdfText.length)+' karakter okundu)</div>';
+
+    // ── Adım 2: Groq'a gönder, soruları çıkar ──
+    const questions = await extractQuestionsFromText(pdfText, key);
+
+    if(!questions||!questions.length){
+      throw new Error('PDF\'de çoktan seçmeli soru bulunamadı. Lütfen A/B/C/D şıklı sorular içeren PDF kullanın.');
+    }
+
+    manualQuestions = questions;
+
+    // ── Adım 3: Önizleme göster ──
+    statusEl.innerHTML=`<div style="background:#E3EEE3;border-radius:8px;padding:9px 12px;color:var(--good);font-size:13px;font-weight:600;">
+      ✓ ${questions.length} soru başarıyla çıkarıldı!
+    </div>`;
+
+    previewEl.style.display='block';
+    previewEl.innerHTML=`
+      <div class="stit" style="margin-top:12px;">Çıkarılan Sorular (Önizleme)</div>
+      <div style="max-height:300px;overflow-y:auto;">
+        ${questions.slice(0,5).map((q,i)=>`
+          <div style="background:var(--cream);border-radius:9px;padding:11px 13px;margin-bottom:8px;">
+            <div style="font-weight:600;font-size:13px;margin-bottom:6px;">${i+1}. ${q.question}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+              ${q.options.map(o=>`<div style="font-size:12px;padding:4px 8px;background:${o===q.correctAnswer?'#E3EEE3':'var(--paper)'};border:1px solid ${o===q.correctAnswer?'var(--good)':'var(--line)'};border-radius:6px;color:${o===q.correctAnswer?'var(--good)':'var(--ink)'};">${o}${o===q.correctAnswer?' ✓':''}</div>`).join('')}
+            </div>
+          </div>`).join('')}
+        ${questions.length>5?`<div style="text-align:center;font-size:12px;color:var(--ink-soft);padding:8px;">... ve ${questions.length-5} soru daha</div>`:''}
+      </div>
+      <div style="font-size:12px;color:var(--ink-soft);margin-top:6px;">
+        Soruları düzenlemek için "Denemeyi Oluştur" butonuna tıklayın. Cevap anahtarı AI tarafından belirlendi.
+      </div>`;
+
+  }catch(err){
+    statusEl.innerHTML=`<div style="background:var(--rose-soft);border-radius:8px;padding:9px 12px;color:var(--rose);font-size:13px;">
+      ✗ ${err.message}
+    </div>`;
+    manualQuestions=[];
+  }finally{
+    $('emParsePdfBtn').disabled=false;
+  }
+}
+
+async function extractPdfText(file){
+  // PDF.js CDN'den yükle (lazy load)
+  if(!window.pdfjsLib){
+    await new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.onload=()=>{
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        resolve();
+      };
+      script.onerror=()=>reject(new Error('PDF.js yüklenemedi. İnternet bağlantınızı kontrol edin.'));
+      document.head.appendChild(script);
+    });
+  }
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({data:arrayBuffer}).promise;
+  let fullText='';
+
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const content=await page.getTextContent();
+    const pageText=content.items.map(item=>item.str).join(' ');
+    fullText+='\n--- Sayfa '+i+' ---\n'+pageText;
+  }
+  return fullText.trim();
+}
+
+async function extractQuestionsFromText(text, key){
+  // Metin çok uzunsa ilk 12000 karakter al (Groq token limiti)
+  const truncated = text.length>12000 ? text.slice(0,12000)+'...[kısaltıldı]' : text;
+
+  const prompt=`Aşağıdaki PDF'den alınan Türkçe sınav metninden SADECE çoktan seçmeli soruları çıkar.
+
+METİN:
+${truncated}
+
+KURALLAR:
+1. Her soru için: soru metni, A/B/C/D şıkları ve doğru cevabı belirle
+2. Doğru cevabı metin içindeki cevap anahtarından al, yoksa kendi bilginle belirle
+3. Soru numaraları, "A)", "B)" gibi şık göstergeleri içeriği değil
+4. SADECE JSON döndür, başka hiçbir şey yazma:
+
+{"questions":[{"question":"Soru metni","options":["A) ...","B) ...","C) ...","D) ..."],"correctAnswer":"A) ...","explanation":"Kısa açıklama (opsiyonel)"}]}`;
+
+  const MODELS=['llama-3.3-70b-versatile','llama3-70b-8192','llama3-8b-8192'];
+  let lastErr='';
+
+  for(const model of MODELS){
+    try{
+      const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body:JSON.stringify({
+          model,
+          messages:[{role:'user',content:prompt}],
+          temperature:0.1,
+          max_tokens:6000
+        })
+      });
+      const data=await resp.json();
+      if(!resp.ok){lastErr=model+': '+(data.error?.message||resp.status);continue;}
+
+      const text2=data.choices?.[0]?.message?.content||'';
+      if(!text2){lastErr=model+': boş yanıt';continue;}
+
+      // JSON parse
+      const clean=text2.replace(/```json|```/g,'').trim();
+      let parsed;
+      try{parsed=JSON.parse(clean);}
+      catch(e){
+        const m=clean.match(/\{[\s\S]*"questions"[\s\S]*\}/);
+        if(!m){lastErr=model+': JSON parse hatası';continue;}
+        parsed=JSON.parse(m[0]);
+      }
+
+      if(!parsed?.questions?.length){lastErr=model+': soru bulunamadı';continue;}
+
+      // Şık formatını normalize et (A) ile başlamıyorsa düzelt)
+      return parsed.questions.map(q=>{
+        const opts=q.options.map((o,i)=>{
+          const prefix=['A)','B)','C)','D)'][i];
+          return o.startsWith(prefix)?o:prefix+' '+o.replace(/^[A-Da-d][)\.]?\s*/,'');
+        });
+        let ans=q.correctAnswer||opts[0];
+        if(!opts.includes(ans)){
+          // Cevap "A" veya "A." formatındaysa dönüştür
+          const letter=ans.replace(/[^A-Da-d]/g,'').toUpperCase();
+          const idx=['A','B','C','D'].indexOf(letter);
+          if(idx>=0&&opts[idx]) ans=opts[idx];
+        }
+        return{question:q.question,options:opts,correctAnswer:ans,explanation:q.explanation||''};
+      }).filter(q=>q.question&&q.options.length>=2);
+
+    }catch(e){lastErr=model+': '+e.message;}
+  }
+  throw new Error('AI soruları çıkaramadı: '+lastErr);
+}
+
 function emSwTab(t){
   emActiveTab=t;
   ['ai','manual'].forEach(tab=>{
