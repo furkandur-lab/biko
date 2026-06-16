@@ -1931,6 +1931,19 @@ function rExamMgmtDetail(){
   $('examAllStudents').onchange=()=>rExamMgmtDetail();
   $('emCreateBtn').onclick=()=>emCreate(allSel,c);
 
+  // Tab event delegation (onclick yerine)
+  const tabContainer=document.querySelector('[data-emtab]')?.parentElement;
+  if(tabContainer){
+    tabContainer.onclick=ev=>{
+      const tab=ev.target.closest('[data-emtab]');
+      if(tab) emSwTab(tab.dataset.emtab);
+    };
+  }
+  // Fallback: doğrudan buton bağla
+  const tabAI=$('emTabAI'); const tabManual=$('emTabManual');
+  if(tabAI) tabAI.onclick=()=>emSwTab('ai');
+  if(tabManual) tabManual.onclick=()=>emSwTab('manual');
+
 
 
   $('emParseBtn').onclick=()=>{
@@ -2733,6 +2746,10 @@ function bindAll(){
   // MODAL close buttons
   document.querySelectorAll('[data-close]').forEach(btn=>btn.onclick=()=>closeM(btn.dataset.close));
 }
+
+// ═══ GLOBAL ALIASES (inline onclick için) ═══
+window.emSwTab = function(t){ emSwTab(t); };
+window.parsePdfWithAI = function(){ parsePdfWithAI(); };
 
 // ═══ INIT ═══
 load();
