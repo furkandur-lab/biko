@@ -1931,20 +1931,7 @@ function rExamMgmtDetail(){
   $('examAllStudents').onchange=()=>rExamMgmtDetail();
   $('emCreateBtn').onclick=()=>emCreate(allSel,c);
 
-  // PDF dosya seçimi önizleme
-  if($('emPdfFile')){
-    $('emPdfFile').onchange=()=>{
-      const file=$('emPdfFile').files[0];
-      if(!file) return;
-      $('emPdfName').textContent=file.name;
-      $('emPdfSize').textContent=(file.size/1024/1024).toFixed(2)+' MB';
-      $('emPdfPreview').style.display='block';
-      $('emParsedPreview').style.display='none';
-      $('emParseStatus').innerHTML='';
-      manualQuestions=[];
-    };
-    $('emParsePdfBtn').onclick=()=>parsePdfWithAI();
-  }
+
 
   $('emParseBtn').onclick=()=>{
     try{
@@ -2138,6 +2125,30 @@ function emSwTab(t){
     if(el){el.style.background=t===tab?'var(--teal)':'var(--cream)';el.style.color=t===tab?'#fff':'var(--ink-soft)';}
     if(panel) panel.style.display=t===tab?'block':'none';
   });
+  // Manual tab açılınca PDF butonlarını bağla
+  if(t==='manual'){
+    setTimeout(()=>{
+      const pdfFileEl=$('emPdfFile');
+      const parseBtnEl=$('emParsePdfBtn');
+      if(pdfFileEl&&!pdfFileEl.dataset.bound){
+        pdfFileEl.onchange=()=>{
+          const file=pdfFileEl.files[0];
+          if(!file) return;
+          $('emPdfName').textContent=file.name;
+          $('emPdfSize').textContent=(file.size/1024/1024).toFixed(2)+' MB';
+          $('emPdfPreview').style.display='block';
+          $('emParsedPreview').style.display='none';
+          $('emParseStatus').innerHTML='';
+          manualQuestions=[];
+        };
+        pdfFileEl.dataset.bound='1';
+      }
+      if(parseBtnEl&&!parseBtnEl.dataset.bound){
+        parseBtnEl.onclick=()=>parsePdfWithAI();
+        parseBtnEl.dataset.bound='1';
+      }
+    },50);
+  }
 }
 
 async function emCreate(allSel,singleClient){
