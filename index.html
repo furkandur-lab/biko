@@ -544,8 +544,7 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
     </div>
   </div>
 </div>
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
+<script defer>
 'use strict';
 const TODAY=new Date().toISOString().slice(0,10);
 const SK='bikoc_v4';
@@ -1134,7 +1133,7 @@ function doImport(e){const file=e.target.files[0];if(!file)return;const r=new Fi
 function doLogout(){stopVid();if(pomInt){clearInterval(pomInt);pomInt=null;pomRun=false;}role=null;activeClient=null;document.getElementById('appShell').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('coachPin').value='';document.getElementById('studentPin').value='';document.getElementById('parentPin').value='';document.querySelectorAll('.login-panel').forEach(p=>p.style.display='none');document.getElementById('roleSelect').style.display='block';}
 
 openIDB().catch(()=>console.warn('IndexedDB kullanılamıyor.'));
-}); // DOMContentLoaded
+
 </script>
 </body>
 </html>
