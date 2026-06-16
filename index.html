@@ -1070,9 +1070,10 @@ async function generateAiTest(topics,count,difficulty,key){
 SADECE şu JSON formatında yanıt ver, başka HİÇBİR ŞEY yazma, markdown kullanma:
 {"questions":[{"question":"Soru metni","options":["A) ...","B) ...","C) ...","D) ..."],"correctAnswer":"A) ...","explanation":"Kısa açıklama"}]}`;
   const ENDPOINTS=[
-    'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key='+key,
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,
-    'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key='+key,
+    'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key='+key,
+    'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key='+key,
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+key,
   ];
   let lastErr='';
   for(const url of ENDPOINTS){
@@ -1094,7 +1095,7 @@ SADECE şu JSON formatında yanıt ver, başka HİÇBİR ŞEY yazma, markdown ku
       return parsed.questions;
     }catch(e){lastErr=e.message;}
   }
-  throw new Error('Soru üretilemedi: '+lastErr+'\n\nAPI anahtarınızın geçerli olduğundan ve Google AI Studio hesabınızda gemini-1.5-flash modelinin aktif olduğundan emin olun.');
+  throw new Error('Soru üretilemedi: '+lastErr+'\n\nAPI anahtarınızın geçerli olduğundan emin olun. Desteklenen modeller: gemini-2.5-flash, gemini-2.0-flash');
 }
 function renderAiQ(c){
   const area=document.getElementById('aiQuizArea');if(aiQIdx>=aiTestQ.length){showAiScore(c);return;}
