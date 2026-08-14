@@ -712,7 +712,7 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
       <div class="rpage" id="parRepContent"></div>
     <div id="page-par-schedule" class="page">
       <div class="ph"><div><h1>📅 Haftalık Program</h1><p>Çocuğunuzun haftalık çalışma programı</p></div></div>
-      <div class="card">
+      <div class="card" style="overflow-x:auto;">
         <div class="stabs" id="parSchedTabs">
           <div class="stab active" data-v="weekly">Haftalık</div>
           <div class="stab" data-v="daily">Günlük</div>
@@ -1495,6 +1495,11 @@ function bf(c){
   c.fee=c.fee||0; c.school=c.school||''; c.grade=c.grade||'';
   c.pin=c.pin||''; c.parentPin=c.parentPin||'';
   c.videos.forEach(v=>{v.type=v.type||'yt'; if(!v.embedSrc&&v.ytId) v.embedSrc=`https://www.youtube-nocookie.com/embed/${v.ytId}?enablejsapi=1&rel=0`;});
+  // Eğer schedule boşsa SEED'den al (migration için)
+  if(!c.schedule||!c.schedule.length){
+    const seed=SEED.clients.find(x=>x.id===c.id);
+    if(seed&&seed.schedule&&seed.schedule.length) c.schedule=[...seed.schedule];
+  }
   c.exams.forEach(ex=>ex.subjects.forEach(s=>{s.weakTopics=s.weakTopics||[];}));
   c.assignments.forEach(a=>{a.autoAdded=a.autoAdded||false;});
 }
@@ -3731,7 +3736,11 @@ function rSmsPage(){
 }
 
 function rParSched(){
-  const c=getAC(); if(!c) return;
+  // Velinin activeClient'ını state.clients'tan fresh al (localStorage sync)
+  const raw=getAC();
+  const c=raw?state.clients.find(x=>x.id===raw.id)||raw:null;
+  const view=$('parSchedView');
+  if(!c){if(view)view.innerHTML='<div class="empty">Öğrenci bulunamadı.</div>';return;}
   const tabs=$('parSchedTabs');
   if(tabs&&!tabs.dataset.b){
     tabs.querySelectorAll('.stab').forEach(function(tab){
@@ -3743,9 +3752,17 @@ function rParSched(){
     });
     tabs.dataset.b='1';
   }
+  if(!c.schedule||!c.schedule.length){
+    if(view)view.innerHTML='<div class="empty">Henüz haftalık program oluşturulmamış.<br><span style="font-size:12px;color:var(--ink-soft);">Koç Program sayfasından program ekleyebilir.</span></div>';
+    const leg=$('parSchedLeg');if(leg)leg.innerHTML='';
+    return;
+  }
   drawParSch(c);
 }
 function drawParSch(c){
+  const leg=$('parSchedLeg');
+  const view=$('parSchedView');
+  if(!leg||!view) return;
   drawLeg(c,'parSchedLeg');
   if(parSchedView==='weekly') drawWG(c,'parSchedView',false);
   else if(parSchedView==='daily') drawDL(c,'parSchedView',false);
@@ -3979,7 +3996,7 @@ function bindAll(){
     initBookInput();
     openM('mClient');
   };
-}
+} // end bindAll
 
 // ═══ GLOBAL ALIASES (inline onclick için) ═══
 window.emSwTab = function(t){ emSwTab(t); };
