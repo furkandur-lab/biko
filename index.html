@@ -1482,7 +1482,8 @@ let role=null, activeClient=null;
 let selC = {client:null,assign:null,exam:null,cur:null,vt:null,acc:null,mood:null};
 let schedView='weekly', stSchedView='weekly', schedColor='#2F5D5C', vTab='local';
 let pomInt=null, pomSec=25*60, pomRun=false, pomTypeSec=25*60, pomTypeLbl='Pomodoro';
-let chatSelContact=null; // {type:'student'|'parent'|'coach', clientId, name}
+let chatSelContact=null;
+let parSchedView='weekly'; // {type:'student'|'parent'|'coach', clientId, name}
 let ytInt=null, ytLast=-1, ytCId=null, ytVId=null;
 let aiTestQ=[], aiQIdx=0, aiScore=0, aiStart=0;
 let curPg='';
@@ -3582,6 +3583,173 @@ function finishExam(){
       </div>`).join('')}
     </div>
     <button class="bp" onclick="navTo('st-dashboard')" style="width:100%;padding:11px;">← Ana Sayfaya Dön</button>`;
+}
+
+// ═══ MESAJLAŞMA SAYFALARI ═══
+function rMessages(){
+  const list=$('chatContactList');
+  if(!list) return;
+  // Önceki kişileri temizle (header dışı)
+  Array.from(list.children).forEach(el=>{if(!el.style||el.className==='chat-contact') el.remove();});
+  list.querySelectorAll('.chat-contact').forEach(el=>el.remove());
+
+  state.clients.forEach(c=>{
+    // Öğrenci thread
+    const ucSt=unreadCount(c.id,'coach-student','coach');
+    const dSt=document.createElement('div');
+    dSt.className='chat-contact'+(chatSelContact&&chatSelContact.clientId===c.id&&chatSelContact.thread==='coach-student'?' active':'');
+    dSt.innerHTML='<div class="av" style="width:34px;height:34px;font-size:12px;flex-shrink:0;">'+ini(c.name)+'</div>'
+      +'<div style="flex:1;min-width:0;"><div class="chat-cn">'+c.name+'</div><div class="chat-cs">Öğrenci</div></div>'
+      +(ucSt?'<div class="chat-unread">'+ucSt+'</div>':'');
+    dSt.onclick=function(){chatSelContact={clientId:c.id,thread:'coach-student',name:c.name,role:'Öğrenci'};rMessages();openCoachChat();};
+    list.appendChild(dSt);
+    // Veli thread
+    if(c.parentPin){
+      const ucP=unreadCount(c.id,'coach-parent','coach');
+      const dP=document.createElement('div');
+      dP.className='chat-contact'+(chatSelContact&&chatSelContact.clientId===c.id&&chatSelContact.thread==='coach-parent'?' active':'');
+      dP.innerHTML='<div class="av" style="width:34px;height:34px;font-size:12px;flex-shrink:0;background:var(--parent);">'+ini(c.name)+'</div>'
+        +'<div style="flex:1;min-width:0;"><div class="chat-cn">'+c.name+' (Veli)</div><div class="chat-cs">Veli</div></div>'
+        +(ucP?'<div class="chat-unread">'+ucP+'</div>':'');
+      dP.onclick=function(){chatSelContact={clientId:c.id,thread:'coach-parent',name:c.name+' (Veli)',role:'Veli'};rMessages();openCoachChat();};
+      list.appendChild(dP);
+    }
+  });
+
+  if(chatSelContact) openCoachChat();
+  else {
+    const msgs=$('chatMsgs');
+    if(msgs) msgs.innerHTML='<div style="text-align:center;color:var(--ink-soft);font-size:12.5px;padding:30px 0;">Sol taraftan kişi seçin</div>';
+  }
+
+  // Gönder butonu
+  const sendBtn=$('chatSendBtn');
+  if(sendBtn&&!sendBtn.dataset.b){
+    sendBtn.onclick=function(){
+      if(!chatSelContact) return;
+      const inp=$('chatInput'); if(!inp) return;
+      const t=inp.value.trim(); if(!t) return;
+      sendMsg(chatSelContact.clientId,chatSelContact.thread,t,'coach');
+      inp.value='';
+      openCoachChat();
+    };
+    const inp=$('chatInput');
+    if(inp) inp.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();sendBtn.click();}});
+    sendBtn.dataset.b='1';
+  }
+}
+
+function openCoachChat(){
+  if(!chatSelContact) return;
+  const av=$('chatAv'); const nm=$('chatName'); const rl=$('chatRole');
+  if(av) av.textContent=ini(chatSelContact.name).slice(0,2);
+  if(nm) nm.textContent=chatSelContact.name;
+  if(rl) rl.textContent=chatSelContact.role;
+  markMsgsRead(chatSelContact.clientId,chatSelContact.thread,'coach');
+  renderChatMsgs(getMsgs(chatSelContact.clientId,chatSelContact.thread),'coach','chatMsgs');
+}
+
+function rStMessages(){
+  const c=getAC(); if(!c) return;
+  const thread='coach-student';
+  const list=$('stChatContactList');
+  if(list){
+    list.querySelectorAll('.chat-contact').forEach(el=>el.remove());
+    const d=document.createElement('div');
+    d.className='chat-contact active';
+    d.innerHTML='<div class="av" style="width:34px;height:34px;font-size:12px;flex-shrink:0;background:var(--teal);">K</div>'
+      +'<div><div class="chat-cn">Koçunuz</div><div class="chat-cs">Öğretmeniniz</div></div>';
+    list.appendChild(d);
+  }
+  markMsgsRead(c.id,thread,'student');
+  renderChatMsgs(getMsgs(c.id,thread),'student','stChatMsgs');
+  const sendBtn=$('stChatSendBtn');
+  if(sendBtn&&!sendBtn.dataset.b){
+    sendBtn.onclick=function(){
+      const inp=$('stChatInput'); if(!inp) return;
+      const t=inp.value.trim(); if(!t) return;
+      sendMsg(c.id,thread,t,'student');
+      inp.value='';
+      renderChatMsgs(getMsgs(c.id,thread),'student','stChatMsgs');
+    };
+    const inp=$('stChatInput');
+    if(inp) inp.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();sendBtn.click();}});
+    sendBtn.dataset.b='1';
+  }
+}
+
+function rParMessages(){
+  const c=getAC(); if(!c) return;
+  const thread='coach-parent';
+  markMsgsRead(c.id,thread,'parent');
+  renderChatMsgs(getMsgs(c.id,thread),'parent','parChatMsgs');
+  const sendBtn=$('parChatSendBtn');
+  if(sendBtn&&!sendBtn.dataset.b){
+    sendBtn.onclick=function(){
+      const inp=$('parChatInput'); if(!inp) return;
+      const t=inp.value.trim(); if(!t) return;
+      sendMsg(c.id,thread,t,'parent');
+      inp.value='';
+      renderChatMsgs(getMsgs(c.id,thread),'parent','parChatMsgs');
+    };
+    const inp=$('parChatInput');
+    if(inp) inp.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();sendBtn.click();}});
+    sendBtn.dataset.b='1';
+  }
+}
+
+function rSmsPage(){
+  $('smsCreditNum').textContent=state.smsCredits||0;
+  const pkgs=(state.smsPackages||[]).slice().reverse();
+  $('smsPackageList').innerHTML=pkgs.length?pkgs.map(function(p){
+    return'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;">'
+      +'<div><b>'+p.amount+' SMS</b> · '+fd(p.date)+'</div>'
+      +'<div style="color:var(--ink-soft);">'+fTRY(p.cost||0)+'</div></div>';
+  }).join(''):'<div class="empty">Paket yok.</div>';
+  const toSel=$('smsSendTo');
+  if(toSel) toSel.innerHTML=state.clients.flatMap(function(c){
+    return['<option value="'+c.id+'_student">'+c.name+' (Öğrenci)</option>',
+      c.parentPin?'<option value="'+c.id+'_parent">'+c.name+' (Veli)</option>':''];
+  }).filter(Boolean).join('');
+  const tpls=state.smsTpls||[];
+  const tplEl=$('smsTplList');
+  if(tplEl){
+    tplEl.innerHTML=tpls.map(function(t){
+      return'<div class="sms-tpl" data-tid="'+t.id+'"><div class="sms-tpl-name">'+t.name+'</div><div class="sms-tpl-body">'+t.body+'</div></div>';
+    }).join('')||'<div class="empty">Şablon yok.</div>';
+    tplEl.querySelectorAll('.sms-tpl').forEach(function(el){
+      el.onclick=function(){var txt=$('smsMsgText');if(txt)txt.value=tpls.find(function(t){return t.id===Number(el.dataset.tid);})?.body||'';};
+    });
+  }
+  const sendBtn=$('smsSendBtn');
+  if(sendBtn&&!sendBtn.dataset.b){
+    sendBtn.onclick=smsSend;
+    const addCr=$('addSmsCredit'); if(addCr) addCr.onclick=smsAddCredit;
+    const addTp=$('addSmsTpl'); if(addTp) addTp.onclick=smsAddTpl;
+    sendBtn.dataset.b='1';
+  }
+}
+
+function rParSched(){
+  const c=getAC(); if(!c) return;
+  const tabs=$('parSchedTabs');
+  if(tabs&&!tabs.dataset.b){
+    tabs.querySelectorAll('.stab').forEach(function(tab){
+      tab.onclick=function(){
+        parSchedView=tab.dataset.v;
+        tabs.querySelectorAll('.stab').forEach(function(t){t.classList.toggle('active',t===tab);});
+        drawParSch(c);
+      };
+    });
+    tabs.dataset.b='1';
+  }
+  drawParSch(c);
+}
+function drawParSch(c){
+  drawLeg(c,'parSchedLeg');
+  if(parSchedView==='weekly') drawWG(c,'parSchedView',false);
+  else if(parSchedView==='daily') drawDL(c,'parSchedView',false);
+  else drawHL(c,'parSchedView',false);
 }
 
 // ═══ SIDEBAR & NAVIGATION ═══
