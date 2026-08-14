@@ -262,6 +262,50 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
 
 .sbl-ed{cursor:pointer;}
 .sbl-ed:hover{filter:brightness(1.15);}
+/* ── MESAJLAŞMA ── */
+.chat-layout{display:grid;grid-template-columns:240px 1fr;gap:0;height:calc(100vh - 180px);border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--paper);}
+.chat-contacts{border-right:1px solid var(--line);overflow-y:auto;background:var(--cream);}
+.chat-contact{padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px;transition:background .12s;}
+.chat-contact:hover,.chat-contact.active{background:var(--student-soft);}
+.chat-contact .av{width:34px;height:34px;font-size:12px;flex-shrink:0;}
+.chat-cn{font-weight:600;font-size:13px;}
+.chat-cs{font-size:11px;color:var(--ink-soft);}
+.chat-unread{background:var(--rose);color:#fff;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:auto;flex-shrink:0;}
+.chat-main{display:flex;flex-direction:column;height:100%;}
+.chat-header{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--paper);}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--cream);}
+.chat-bubble{max-width:72%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.5;position:relative;}
+.chat-bubble.out{align-self:flex-end;background:var(--teal);color:#fff;border-radius:12px 12px 3px 12px;}
+.chat-bubble.in{align-self:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:12px 12px 12px 3px;}
+.chat-bubble.system{align-self:center;background:var(--clay-soft);color:var(--clay);font-size:11.5px;border-radius:8px;padding:5px 11px;max-width:90%;}
+.chat-time{font-size:10px;opacity:.6;margin-top:3px;text-align:right;}
+.chat-input-area{padding:12px;border-top:1px solid var(--line);display:flex;gap:8px;background:var(--paper);}
+.chat-input{flex:1;padding:9px 13px;border:1.5px solid var(--line);border-radius:22px;font-size:13px;outline:none;resize:none;}
+.chat-input:focus{border-color:var(--teal);}
+.chat-send{width:40px;height:40px;border-radius:50%;background:var(--teal);color:#fff;border:none;font-size:17px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+/* ── TOAST BİLDİRİM ── */
+#toastContainer{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{background:var(--teal-deep);color:#fff;padding:12px 16px;border-radius:11px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.3);pointer-events:all;display:flex;align-items:flex-start;gap:10px;max-width:320px;animation:slideIn .25s ease;}
+.toast.warn{background:var(--clay);}
+.toast.info{background:var(--student);}
+.toast-icon{font-size:17px;flex-shrink:0;}
+.toast-body{flex:1;}
+.toast-title{font-weight:700;font-size:12.5px;margin-bottom:2px;}
+.toast-msg{font-size:12px;opacity:.9;}
+.toast-close{background:none;border:none;color:#fff;font-size:16px;cursor:pointer;opacity:.7;flex-shrink:0;padding:0;}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+/* ── SMS YÖNETİMİ ── */
+.sms-credit-box{background:linear-gradient(135deg,var(--teal-deep),var(--teal));border-radius:12px;padding:16px 20px;color:#fff;margin-bottom:14px;}
+.sms-credit-num{font-size:36px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.sms-tpl{background:var(--cream);border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:border-color .12s;}
+.sms-tpl:hover{border-color:var(--teal);}
+.sms-tpl-name{font-weight:600;font-size:12.5px;margin-bottom:3px;}
+.sms-tpl-body{font-size:12px;color:var(--ink-soft);}
+/* ── KAYNAK KİTAP ── */
+.book-tag{display:inline-flex;align-items:center;gap:5px;background:var(--student-soft);color:var(--student);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;margin:2px;}
+.book-tag .rm{background:none;border:none;color:var(--student);cursor:pointer;font-size:14px;padding:0;line-height:1;}
+.book-add-row{display:flex;gap:7px;margin-top:7px;}
+
 .sched-layout{display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start;}
 .sched-topics-panel{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:14px;position:sticky;top:16px;max-height:calc(100vh - 130px);overflow-y:auto;}
 .sched-grade-sel{width:100%;margin-bottom:10px;font-size:12.5px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--cream);}
@@ -348,6 +392,7 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
   </div>
 </div>
 
+<div id="toastContainer"></div>
 <div id="examTimerEl" class="exam-timer hidden">
   <div><span class="exam-timer-lbl">SÜRE</span><span id="examTimerDisp">00:00</span></div>
   <div id="examTimerIcon">⏱</div>
@@ -582,6 +627,72 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
         <div class="card" id="examAnPanel"><div class="empty">Danışan seçin</div></div>
       </div>
     </div>
+    <div id="page-messages" class="page">
+      <div class="ph"><div><h1>💬 Mesajlaşma</h1><p>Koç, öğrenci ve veli ile anlık mesajlaşma</p></div></div>
+      <div class="chat-layout">
+        <div class="chat-contacts" id="chatContactList">
+          <div style="padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-soft);border-bottom:1px solid var(--line);">Kişiler</div>
+        </div>
+        <div class="chat-main">
+          <div class="chat-header" id="chatHeader">
+            <div class="av" id="chatAv" style="width:34px;height:34px;font-size:12px;flex-shrink:0;"></div>
+            <div><div id="chatName" style="font-weight:700;font-size:14px;">—</div><div id="chatRole" style="font-size:11.5px;color:var(--ink-soft);"></div></div>
+          </div>
+          <div class="chat-msgs" id="chatMsgs"><div style="text-align:center;color:var(--ink-soft);font-size:12.5px;padding:30px 0;">Bir kişi seçin</div></div>
+          <div class="chat-input-area">
+            <textarea class="chat-input" id="chatInput" rows="1" placeholder="Mesaj yaz..."></textarea>
+            <button class="chat-send" id="chatSendBtn">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="page-sms" class="page">
+      <div class="ph"><div><h1>📱 SMS Yönetimi</h1><p>SMS kredi takibi ve şablon yönetimi</p></div>
+        <button class="bp" id="addSmsCredit">+ Paket Ekle</button>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="sms-credit-box">
+            <div style="font-size:12px;opacity:.8;margin-bottom:4px;">Kalan SMS Kredisi</div>
+            <div class="sms-credit-num" id="smsCreditNum">0</div>
+            <div style="font-size:11.5px;opacity:.7;margin-top:4px;">SMS</div>
+          </div>
+          <div class="stit">Paket Geçmişi</div>
+          <div id="smsPackageList"></div>
+          <div class="stit" style="margin-top:14px;">Hızlı SMS Gönder</div>
+          <div class="fi"><label>Alıcı</label><select id="smsSendTo"></select></div>
+          <div class="fi"><label>Mesaj</label><textarea id="smsMsgText" rows="3" placeholder="SMS metnini yazın..."></textarea></div>
+          <button class="bp" id="smsSendBtn" style="width:100%;padding:11px;">📤 SMS Gönder</button>
+          <div id="smsSendStatus" style="margin-top:8px;font-size:12.5px;"></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
+            <div class="stit" style="margin:0;">SMS Şablonları</div>
+            <button class="bg" id="addSmsTpl">+ Şablon</button>
+          </div>
+          <div id="smsTplList"></div>
+        </div>
+      </div>
+    </div>
+    <div id="page-st-messages" class="page">
+      <div class="ph"><div><h1>💬 Mesajlarım</h1><p>Koçunuzla mesajlaşın</p></div></div>
+      <div class="chat-layout">
+        <div class="chat-contacts" id="stChatContactList">
+          <div style="padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-soft);border-bottom:1px solid var(--line);">Kişiler</div>
+        </div>
+        <div class="chat-main">
+          <div class="chat-header" id="stChatHeader">
+            <div class="av" style="width:34px;height:34px;font-size:12px;flex-shrink:0;background:var(--teal);">K</div>
+            <div><div style="font-weight:700;font-size:14px;">Koçunuz</div></div>
+          </div>
+          <div class="chat-msgs" id="stChatMsgs"></div>
+          <div class="chat-input-area">
+            <textarea class="chat-input" id="stChatInput" rows="1" placeholder="Mesaj yaz..."></textarea>
+            <button class="chat-send" id="stChatSendBtn">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="page-ai-coach" class="page">
       <div class="ph">
         <div><h1>AI Koç</h1><p>Danışan bazlı AI test oluştur, ödevlendir ve analiz et</p></div>
@@ -599,6 +710,37 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
     <div id="page-par-dashboard" class="page">
       <div class="ph"><div><h1 id="parTitle">Veli Paneli</h1><p>Salt okunur rapor görünümü</p></div></div>
       <div class="rpage" id="parRepContent"></div>
+    <div id="page-par-schedule" class="page">
+      <div class="ph"><div><h1>📅 Haftalık Program</h1><p>Çocuğunuzun haftalık çalışma programı</p></div></div>
+      <div class="card">
+        <div class="stabs" id="parSchedTabs">
+          <div class="stab active" data-v="weekly">Haftalık</div>
+          <div class="stab" data-v="daily">Günlük</div>
+          <div class="stab" data-v="hourly">Saatlik</div>
+        </div>
+        <div class="sleg" id="parSchedLeg"></div>
+        <div id="parSchedView"></div>
+      </div>
+    </div>
+    <div id="page-par-messages" class="page">
+      <div class="ph"><div><h1>💬 Mesajlar</h1><p>Koçunuzla iletişim</p></div></div>
+      <div class="chat-layout">
+        <div class="chat-contacts" id="parChatContactList">
+          <div style="padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-soft);border-bottom:1px solid var(--line);">Kişiler</div>
+        </div>
+        <div class="chat-main">
+          <div class="chat-header">
+            <div class="av" style="width:34px;height:34px;font-size:12px;flex-shrink:0;background:var(--teal);">K</div>
+            <div><div style="font-weight:700;font-size:14px;">Koçunuz</div></div>
+          </div>
+          <div class="chat-msgs" id="parChatMsgs"></div>
+          <div class="chat-input-area">
+            <textarea class="chat-input" id="parChatInput" rows="1" placeholder="Mesaj yaz..."></textarea>
+            <button class="chat-send" id="parChatSendBtn">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
     </div>
 
   </div>
@@ -613,6 +755,13 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
     <div class="fi"><label>Hedef</label><input id="cGoal"></div>
     <div class="fr"><div class="fi"><label>Aylık Ücret ₺</label><input type="number" id="cFee"></div><div class="fi"><label>Öğrenci PIN (4)</label><input type="text" id="cPin" class="mpin" maxlength="4"></div></div>
     <div class="fi"><label>Veli PIN (4)</label><input type="text" id="cParentPin" class="mpin" maxlength="4"></div>
+    <div class="fi"><label>Kaynak Kitaplar</label>
+      <div id="cBookTags" style="min-height:34px;border:1.5px solid var(--line);border-radius:9px;padding:5px 8px;background:var(--cream);"></div>
+      <div class="book-add-row">
+        <input id="cBookInput" placeholder="Kitap adı yaz, Enter'a bas" style="flex:1;">
+        <button class="bg" id="cBookAddBtn" type="button">+ Ekle</button>
+      </div>
+    </div>
     <div class="mac"><button class="bg" data-close="mClient">Vazgeç</button><button class="bp" id="saveClientBtn">Kaydet</button></div>
   </div>
 </div>
@@ -661,37 +810,9 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
   <div class="modal"><h2 id="examMTitle">Deneme Ekle</h2>
     <input type="hidden" id="examEId">
     <div class="fr"><div class="fi"><label>Deneme Adı</label><input id="exName"></div><div class="fi"><label>Tarih</label><input type="date" id="exDate"></div></div>
-    <div class="fi"><label>Ders Sonuçları — D/Y/B + Hatalı Konular</label><div id="exSubjs"></div><button class="bg" id="exAddRow" style="margin-top:6px;">+ Ders Ekle</button></div>
-    <div class="mac"><button class="bg" data-close="mExam">Vazgeç</button><button class="bp" id="saveExBtn">Kaydet</button></div>
-  </div>
-</div>
-
-<div class="modal-bg hidden" id="mSched">
-  <div class="modal"><h2 id="schedMTitle">Blok Ekle</h2>
-    <input type="hidden" id="schedEId">
-    <div class="fr"><div class="fi"><label>Ders / Aktivite</label><input id="sbSubj"></div><div class="fi"><label>Gün</label><select id="sbDay"><option value="0">Pazartesi</option><option value="1">Salı</option><option value="2">Çarşamba</option><option value="3">Perşembe</option><option value="4">Cuma</option><option value="5">Cumartesi</option><option value="6">Pazar</option></select></div></div>
-    <div class="fr"><div class="fi"><label>Başlangıç</label><input type="time" id="sbStart" value="09:00"></div><div class="fi"><label>Bitiş</label><input type="time" id="sbEnd" value="10:00"></div></div>
-    <div class="fi"><label>Not</label><input id="sbNote"></div>
-    <div class="fi"><label>Renk</label><div id="colorPicker" style="display:flex;gap:7px;margin-top:4px;">
-      <div class="csw sel" data-c="#2F5D5C" style="background:#2F5D5C;"></div>
-      <div class="csw" data-c="#C9764A" style="background:#C9764A;"></div>
-      <div class="csw" data-c="#4A5FC9" style="background:#4A5FC9;"></div>
-      <div class="csw" data-c="#7C5CBF" style="background:#7C5CBF;"></div>
-      <div class="csw" data-c="#D4700A" style="background:#D4700A;"></div>
-      <div class="csw" data-c="#B5434A" style="background:#B5434A;"></div>
-      <div class="csw" data-c="#5C8A5C" style="background:#5C8A5C;"></div>
-      <div class="csw" data-c="#888" style="background:#888;"></div>
-    </div></div>
-    <div class="mac">
-      <button class="bd hidden" id="schedDelBtn">Sil</button>
-      <button class="bg" data-close="mSched">Vazgeç</button>
-      <button class="bp" id="saveSchedBtn">Kaydet</button>
-    </div>
-  </div>
-</div>
-
-
+    <div class="fi"><label>Ders Sonuçları — D/Y/B + Hatalı Konular</label><div id="exSubjs"></div>
 <script>
+
 document.addEventListener('DOMContentLoaded', function() {
 
 'use strict';
@@ -1356,11 +1477,12 @@ appts:[{id:1,clientId:1,date:TODAY,time:'10:00',type:'Birebir koçluk'},{id:2,cl
 aiApiKey:'',generatedTests:[]};
 
 // ═══ STATE ═══
-let state = {clients:[],appts:[],aiApiKey:'',generatedTests:[]};
+let state = {clients:[],appts:[],aiApiKey:'',generatedTests:[],smsCredits:0,smsPackages:[],smsTpls:[{id:1,name:'Ödeme Hatırlatması',body:'Sayın {veli}, {ogrenci} adlı öğrencinizin {tutar} TL tutarındaki koçluk ücreti ödemesi beklenmektedir.'},{id:2,name:'Deneme Bildirimi',body:'Sayın {veli}, {ogrenci} bugün deneme sınavına girmiştir. Sonuçlar panelde mevcuttur.'},{id:3,name:'Genel Bilgilendirme',body:'Sayın {veli}, {ogrenci} ile ilgili bilgilendirme için lütfen koçunuzla iletişime geçin.'}]};
 let role=null, activeClient=null;
 let selC = {client:null,assign:null,exam:null,cur:null,vt:null,acc:null,mood:null};
 let schedView='weekly', stSchedView='weekly', schedColor='#2F5D5C', vTab='local';
 let pomInt=null, pomSec=25*60, pomRun=false, pomTypeSec=25*60, pomTypeLbl='Pomodoro';
+let chatSelContact=null; // {type:'student'|'parent'|'coach', clientId, name}
 let ytInt=null, ytLast=-1, ytCId=null, ytVId=null;
 let aiTestQ=[], aiQIdx=0, aiScore=0, aiStart=0;
 let curPg='';
@@ -1368,7 +1490,7 @@ let curPg='';
 // ═══ PERSIST ═══// ═══ PERSIST ═══
 function bf(c){
   ['notes','assignments','exams','studyLog','resources','ledger',
-   'videos','videoLogs','schedule','moodLog','pomLog'].forEach(k=>{c[k]=c[k]||[];});
+   'videos','videoLogs','schedule','moodLog','pomLog','messages','books','examResults','aiTests'].forEach(k=>{c[k]=c[k]||[];});
   c.fee=c.fee||0; c.school=c.school||''; c.grade=c.grade||'';
   c.pin=c.pin||''; c.parentPin=c.parentPin||'';
   c.videos.forEach(v=>{v.type=v.type||'yt'; if(!v.embedSrc&&v.ytId) v.embedSrc=`https://www.youtube-nocookie.com/embed/${v.ytId}?enablejsapi=1&rel=0`;});
@@ -1452,7 +1574,7 @@ function buildRepHTML(c){
     <div class="rsec"><h3>Eksik Analizi</h3>${weakest.length?`<div class="wkbox"><b>Öncelikli:</b> ${weakest.map(r=>`${r.n} (%${Math.round(r.a*100)} doğruluk)`).join(', ')}</div>`:'<p style="font-size:12.5px;color:var(--ink-soft);">Belirgin eksik yok.</p>'}</div>
     <div class="rsec"><h3>Müfredat</h3>${curH}</div>
     <div class="rsec"><h3>Ödev</h3><p style="font-size:12.5px;">${doneA}/${c.assignments.length} ödev tamamlandı.</p></div>
-    <div class="rsec"><h3>Çalışma</h3><p style="font-size:12.5px;"><b>${totalH} saat</b> çalışma. Son duygu: <b>${moodStr}</b>.</p></div>
+    <div class="rsec"><h3>Çalışma</h3><p style="font-size:12.5px;"><b>${totalH} saat</b> toplam çalışma süresi.</p></div>
     <div class="rsec"><h3>Cari</h3><p style="font-size:12.5px;">Aylık: <b>${fTRY(c.fee||0)}</b> · Bakiye: <b>${b>0?fTRY(b)+' (borç)':'Güncel'}</b></p></div>
   </div>
   <div class="rfoot"><span>BİKOÇ Eğitim Koçluğu</span><span>${c.name} · ${fd(TODAY)}</span></div>`;
@@ -2323,11 +2445,20 @@ function rAccDetail(){
       <button class="bp" id="lgAdd">+ Ekle</button>
     </div>`;
   $('lgAdd').onclick=()=>{const desc=$('lgDesc').value.trim();const amt=Number($('lgAmt').value);if(!desc||!amt){alert('Açıklama ve tutar girin.');return;}c.ledger.push({date:$('lgDate').value||TODAY,desc,amount:amt,type:$('lgType').value});rerender();};
+  const remBtn=document.createElement('button');remBtn.className='bg';remBtn.style.cssText='width:100%;margin-top:8px;';remBtn.textContent='📩 Veliye Ödeme Hatırlatması Gönder';remBtn.onclick=()=>sendPaymentReminder(c);wrap.appendChild(remBtn);
 }
 
 function rSettings(){
   $('aiKeyInput').value=localStorage.getItem(AI_KEY_K)||'';
   $('newPinInput').value='';
+  // Client PIN selector
+  const pinSel=$('pinClientSel');
+  if(pinSel){
+    pinSel.innerHTML=state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    function updatePinInfo(){const c=state.clients.find(x=>x.id===Number(pinSel.value));if(c&&$('pinCurrentInfo'))$('pinCurrentInfo').textContent='Mevcut: Öğrenci='+c.pin+' Veli='+c.parentPin;}
+    updatePinInfo();
+    if(!pinSel.dataset.b){pinSel.addEventListener('change',()=>{updatePinInfo();if($('pinStudentNew'))$('pinStudentNew').value='';if($('pinParentNew'))$('pinParentNew').value='';});pinSel.dataset.b='1';}
+  }
 }
 
 // ═══ STUDENT RENDERS ═══
@@ -2428,13 +2559,152 @@ function rParDash(){
 // ═══════════════════════════════════════════════════
 let aiCoachSelId = null;
 
+// Mesaj yardımcıları
+function getMsgs(clientId, thread){
+  const c=state.clients.find(x=>x.id===clientId);
+  if(!c) return [];
+  return (c.messages||[]).filter(m=>m.thread===thread);
+}
+function sendMsg(clientId, thread, text, senderRole){
+  const c=state.clients.find(x=>x.id===clientId);
+  if(!c||!text.trim()) return null;
+  if(!c.messages) c.messages=[];
+  const msg={id:Date.now(),thread,text:text.trim(),sender:senderRole,ts:Date.now(),read:false};
+  c.messages.push(msg);save();
+  if(senderRole==='coach'){
+    const target=thread==='coach-parent'?'Veli':'Öğrenci';
+    showToast('"'+text.trim().slice(0,50)+'"', c.name+' → '+target,'info');
+  } else {showToast(c.name+' size mesaj gönderdi','💬 Yeni Mesaj','info');}
+  return msg;
+}
+function markMsgsRead(clientId, thread, byRole){
+  const c=state.clients.find(x=>x.id===clientId);if(!c) return;
+  (c.messages||[]).filter(m=>m.thread===thread&&m.sender!==byRole).forEach(m=>m.read=true);save();
+}
+function unreadCount(clientId, thread, byRole){
+  const c=state.clients.find(x=>x.id===clientId);if(!c) return 0;
+  return (c.messages||[]).filter(m=>m.thread===thread&&m.sender!==byRole&&!m.read).length;
+}
+function renderChatMsgs(msgs, myRole, elId){
+  const el=$(elId); if(!el) return;
+  if(!msgs.length){el.innerHTML='<div style="text-align:center;color:var(--ink-soft);font-size:12.5px;padding:30px 0;">Henüz mesaj yok 👋</div>';return;}
+  el.innerHTML=msgs.map(function(m){
+    const isMe=m.sender===myRole;
+    const time=new Date(m.ts).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+    if(m.sender==='system') return'<div class="chat-bubble system">'+m.text+'</div>';
+    return'<div style="display:flex;flex-direction:column;align-items:'+(isMe?'flex-end':'flex-start')+';"><div class="chat-bubble '+(isMe?'out':'in')+'">'+m.text+'<div class="chat-time">'+time+'</div></div></div>';
+  }).join('');
+  el.scrollTop=el.scrollHeight;
+}
+function sendPaymentReminder(c){
+  const b=bal(c);
+  if(b<=0){alert('Bu danışanın borcu yok.');return;}
+  const msg='Sayın Veli, '+c.name+' adlı öğrencinizin '+fTRY(b)+' tutarındaki koçluk ücreti ödemesi beklenmektedir.';
+  sendMsg(c.id,'coach-parent',msg,'coach');
+  showToast(c.name+' — ödeme hatırlatması gönderildi','💰 Ödeme');
+  alert('✓ Veliye mesaj olarak gönderildi.');
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST BİLDİRİM SİSTEMİ
+// ═══════════════════════════════════════════════════
+function showToast(msg, title, type, duration){
+  duration=duration||4000;
+  const container=$('toastContainer');
+  if(!container) return;
+  const t=document.createElement('div');
+  t.className='toast'+(type?' '+type:'');
+  const icon=type==='warn'?'⚠️':type==='info'?'ℹ️':'✅';
+  t.innerHTML='<span class="toast-icon">'+icon+'</span>'
+    +'<div class="toast-body">'
+    +(title?'<div class="toast-title">'+title+'</div>':'')
+    +'<div class="toast-msg">'+msg+'</div>'
+    +'</div>'
+    +'<button class="toast-close" onclick="this.closest(\'.toast\').remove()">✕</button>';
+  container.appendChild(t);
+  setTimeout(function(){
+    t.style.animation='slideIn .25s ease reverse';
+    setTimeout(function(){t.remove();},250);
+  },duration);
+}
+
+// ═══════════════════════════════════════════════════
+// AI KOÇPANEL — DENEME ANALİZ REVİZYONU
+// ═══════════════════════════════════════════════════
+async function rAiCoachAnalysis(){
+  const wrap=$('aiCoachPanel');
+  const c=state.clients.find(function(x){return x.id===aiCoachSelId;});
+  if(!c){wrap.innerHTML='<div class="empty">Danışan seçin</div>';return;}
+  const key=localStorage.getItem(AI_KEY_K)||'';
+  const onlineResults=c.examResults||[];
+  const manualExams=c.exams||[];
+  const hasData=onlineResults.length+manualExams.length>0;
+  if(!hasData){
+    wrap.innerHTML='<h2 style="margin:0 0 13px;font-family:Fraunces,serif;">'+c.name+' — AI Analiz</h2>'
+      +'<div class="empty">Deneme verisi yok. Önce deneme sonuçları ekleyin.</div>';
+    return;
+  }
+  let totalNets=[]; let subjectAgg={};
+  onlineResults.forEach(function(r){
+    const net=r.correct-(r.total-r.correct)*0.25;
+    totalNets.push({net:net,date:r.date,name:r.title});
+  });
+  manualExams.forEach(function(ex){
+    const net=ex.subjects.reduce(function(s,x){return s+x.correct-x.wrong*0.25;},0);
+    totalNets.push({net:net,date:ex.date,name:ex.name});
+    ex.subjects.forEach(function(s){
+      if(!subjectAgg[s.name])subjectAgg[s.name]={correct:0,wrong:0,empty:0,weakTopics:[]};
+      subjectAgg[s.name].correct+=s.correct;subjectAgg[s.name].wrong+=s.wrong;subjectAgg[s.name].empty+=s.empty;
+      (s.weakTopics||[]).forEach(function(t){subjectAgg[s.name].weakTopics.push(t);});
+    });
+  });
+  totalNets.sort(function(a,b){return a.date.localeCompare(b.date);});
+  const avgNet=totalNets.length?totalNets.reduce(function(s,n){return s+n.net;},0)/totalNets.length:0;
+  const last=totalNets[totalNets.length-1];
+  const first=totalNets[0];
+  const trend=totalNets.length>=2?last.net-first.net:0;
+  const weakTopics={};
+  manualExams.forEach(function(ex){ex.subjects.forEach(function(s){(s.weakTopics||[]).forEach(function(t){weakTopics[t]=(weakTopics[t]||0)+1;});});});
+  onlineResults.forEach(function(r){(r.answers||[]).forEach(function(a){if(!a.correct)weakTopics[a.topic||'Bilinmeyen']=(weakTopics[a.topic||'Bilinmeyen']||0)+1;});});
+  const topWeak=Object.entries(weakTopics).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  wrap.innerHTML='<h2 style="margin:0 0 14px;font-family:Fraunces,serif;">'+c.name+' — Performans Analizi</h2>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">'
+    +'<div style="background:var(--student-soft);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:24px;font-weight:700;color:var(--student);">'+avgNet.toFixed(1)+'</div><div style="font-size:10.5px;color:var(--ink-soft);">Ort. Net</div></div>'
+    +'<div style="background:'+(trend>=0?'#E3EEE3':'var(--rose-soft)')+';border-radius:10px;padding:12px;text-align:center;"><div style="font-size:24px;font-weight:700;color:'+(trend>=0?'var(--good)':'var(--rose)')+';">'+(trend>=0?'+':'')+trend.toFixed(1)+'</div><div style="font-size:10.5px;color:var(--ink-soft);">Trend</div></div>'
+    +'<div style="background:var(--cream);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:24px;font-weight:700;color:var(--teal-deep);">'+totalNets.length+'</div><div style="font-size:10.5px;color:var(--ink-soft);">Deneme</div></div>'
+    +'</div>'
+    +(topWeak.length?'<div class="stit">🔴 Zayıf Konular</div><div style="margin-bottom:14px;">'+topWeak.map(function(x,i){return'<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);"><div style="width:20px;height:20px;border-radius:50%;background:var(--rose);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">'+(i+1)+'</div><div style="flex:1;font-size:13px;font-weight:600;">'+x[0]+'</div><div style="font-size:12px;color:var(--rose);">'+x[1]+'x</div></div>';}).join('')+'</div>':'')
+    +'<button class="bp" id="aiAnalyzeBtn" style="width:100%;padding:11px;margin-bottom:10px;">🤖 AI ile Detaylı Analiz</button>'
+    +'<div id="aiAnalysisResult" style="display:none;"></div>';
+  $('aiAnalyzeBtn').onclick=async function(){
+    if(!key){alert('⚙ Ayarlar > Groq API anahtarı girin.');return;}
+    $('aiAnalyzeBtn').disabled=true; $('aiAnalyzeBtn').textContent='⏳ Analiz yapılıyor...';
+    const weakStr=topWeak.map(function(x){return x[0]+' ('+x[1]+' hata)';}).join(', ');
+    const dersStr=Object.entries(subjectAgg).map(function(e){return e[0]+': '+e[1].correct+'D '+e[1].wrong+'Y';}).join(', ');
+    const prompt='Sen deneyimli bir Türk öğrenci koçusun. Aşağıdaki öğrenci performans verilerini analiz et ve Türkçe koç raporu yaz.\n\nÖĞRENCİ: '+c.name+' | Sınıf: '+(c.grade||'')+' | Hedef: '+(c.goal||'')+'\nORTALAMA NET: '+avgNet.toFixed(1)+' | TREND: '+trend.toFixed(1)+' | TOPLAM DENEME: '+totalNets.length+'\nZAYIF KONULAR: '+(weakStr||'Veri yok')+'\nDERS NETLERİ: '+(dersStr||'Veri yok')+'\n\nRAPOR FORMATI:\n1. 📊 GENEL DEĞERLENDİRME\n2. 🔴 KRİTİK ZAYIFLIKLAR\n3. 💡 AKSİYON ÖNERİLERİ\n4. 🎯 HEDEF STRATEJİSİ';
+    try{
+      const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],temperature:0.7,max_tokens:1500})});
+      const data=await resp.json();
+      const txt=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'';
+      if(!txt) throw new Error('Boş yanıt');
+      $('aiAnalysisResult').style.display='block';
+      $('aiAnalysisResult').innerHTML='<div style="background:var(--student-soft);border:1px solid var(--student);border-radius:11px;padding:16px 18px;font-size:13px;line-height:1.7;white-space:pre-wrap;">'+txt+'</div>';
+    }catch(err){
+      $('aiAnalysisResult').style.display='block';
+      $('aiAnalysisResult').innerHTML='<div style="color:var(--rose);">✗ '+err.message+'</div>';
+    }finally{
+      $('aiAnalyzeBtn').disabled=false; $('aiAnalyzeBtn').textContent='🤖 AI ile Detaylı Analiz';
+    }
+  };
+}
+
 function rAiCoach(){
   const list=$('aiCoachCL'); list.innerHTML='';
   state.clients.forEach(c=>{
     const d=document.createElement('div'); d.className='ci'+(c.id===aiCoachSelId?' active':'');
     const testCnt=(c.aiTests||[]).length;
     d.innerHTML=`<div class="av">${ini(c.name)}</div><div><div class="cn">${c.name}</div><div class="cs">${testCnt} AI test sonucu</div></div>`;
-    d.onclick=()=>{aiCoachSelId=c.id; rAiCoach(); rAiCoachDetail();};
+    d.onclick=()=>{aiCoachSelId=c.id; rAiCoach(); rAiCoachAnalysis();};
     list.appendChild(d);
   });
   rAiCoachDetail();
@@ -3321,10 +3591,11 @@ const CNAV=[
   {id:'curriculum',l:'Müfredat'},{id:'videotracker',l:'Video Takibi'},{id:'mood',l:'Duygu Takibi'},
   {id:'report',l:'Veli Raporu'},{id:'accounts',l:'Cari Hesap'},
   {id:'exam-mgmt',l:'📝 Deneme Yönetimi'},{id:'exam-analysis',l:'📊 Deneme Analizi'},
-  {id:'ai-coach',l:'🤖 AI Koç'},{id:'settings',l:'⚙ Ayarlar'}
+  {id:'messages',l:'💬 Mesajlaşma'},{id:'sms',l:'📱 SMS Yönetimi'},
+  {id:'ai-coach',l:'🤖 AI Analiz'},{id:'settings',l:'⚙ Ayarlar'}
 ];
-const SNAV=[{id:'st-dashboard',l:'Panom'},{id:'st-schedule',l:'Programım'},{id:'st-assignments',l:'Ödevlerim'},{id:'st-video',l:'Video İzleme'},{id:'st-pomodoro',l:'Kronometre'},{id:'st-aitest',l:'✨ AI Test'}];
-const PNAV=[{id:'par-dashboard',l:'Çocuğumun Durumu'}];
+const SNAV=[{id:'st-dashboard',l:'Panom'},{id:'st-schedule',l:'Programım'},{id:'st-assignments',l:'Ödevlerim'},{id:'st-video',l:'Video İzleme'},{id:'st-pomodoro',l:'Kronometre'},{id:'st-messages',l:'💬 Mesajlarım'}];
+const PNAV=[{id:'par-dashboard',l:'Genel Durum'},{id:'par-schedule',l:'Haftalık Program'},{id:'par-messages',l:'💬 Mesajlar'}];
 
 function buildSidebar(){
   const sb=$('sb'); const nav=$('navItems'); const foot=$('sbFoot'); const roleEl=$('sbRole');
@@ -3344,6 +3615,9 @@ const pageMap={
   assignments:rAssCoach, exams:rExamsCoach, curriculum:rCur, videotracker:rVtCoach,
   mood:rMoodCoach, report:rReport, accounts:rAccounts, settings:rSettings,
   'exam-mgmt':rExamMgmt, 'exam-analysis':rExamAnalysis, 'ai-coach':rAiCoach,
+  'messages':rMessages, 'sms':rSmsPage,
+  'st-messages':rStMessages,
+  'par-schedule':rParSched, 'par-messages':rParMessages,
   'st-dashboard':rStDash, 'st-schedule':rStSched, 'st-assignments':rStAssign,
   'st-video':rStVideo, 'st-pomodoro':rPom, 'st-aitest':rAiTest, 'st-exam':rStExam,
   'par-dashboard':rParDash
@@ -3417,11 +3691,11 @@ function bindAll(){
   $('saveMood').onclick=()=>{if(!selMood){alert('Ruh halini seç.');return;}const c=getAC();c.moodLog.unshift({date:TODAY,mood:selMood,net:null,ts:Date.now()});save();$('moodOverlay').classList.add('hidden');};
   $('skipMood').onclick=()=>$('moodOverlay').classList.add('hidden');
   // CLIENTS
-  $('addClientBtn').onclick=()=>{['cName','cEmail','cPhone','cSchool','cGoal','cPin','cParentPin'].forEach(id=>$(id).value='');$('cGrade').value='';$('cFee').value='';openM('mClient');};
+  // addClientBtn binding moved to end of bindAll
   $('clientSearch').oninput=()=>rClients();
   $('saveClientBtn').onclick=()=>{
     const name=$('cName').value.trim(); if(!name){alert('Ad girin.');return;}
-    const c={id:Date.now(),name,email:$('cEmail').value.trim(),phone:$('cPhone').value.trim(),school:$('cSchool').value.trim(),grade:$('cGrade').value,goal:$('cGoal').value.trim(),fee:Number($('cFee').value)||0,pin:$('cPin').value.trim(),parentPin:$('cParentPin').value.trim(),notes:[],assignments:[],exams:[],curriculum:{},studyLog:[],resources:[],ledger:[],videos:[],videoLogs:[],schedule:[],moodLog:[],pomLog:[]};
+    const c={id:Date.now(),name,email:$('cEmail').value.trim(),phone:$('cPhone').value.trim(),school:$('cSchool').value.trim(),grade:$('cGrade').value,goal:$('cGoal').value.trim(),fee:Number($('cFee').value)||0,pin:$('cPin').value.trim(),parentPin:$('cParentPin').value.trim(),notes:[],assignments:[],exams:[],curriculum:{},studyLog:[],resources:[],ledger:[],videos:[],videoLogs:[],schedule:[],moodLog:[],pomLog:[],messages:[],books:[...cBookList],examResults:[],aiTests:[]};
     state.clients.push(c); selC.client=c.id; closeM('mClient'); rerender();
   };
   // APPOINTMENTS
@@ -3494,6 +3768,25 @@ function bindAll(){
   $('pomReset').onclick=()=>resetPom();
   // MODAL close buttons
   document.querySelectorAll('[data-close]').forEach(btn=>btn.onclick=()=>closeM(btn.dataset.close));
+  // Chat send buttons (Koç)
+  if($('chatSendBtn')){
+    $('chatSendBtn').onclick=()=>{
+      if(!chatSelContact) return;
+      const t=$('chatInput').value.trim(); if(!t) return;
+      sendMsg(chatSelContact.clientId,chatSelContact.thread,t,'coach');
+      $('chatInput').value='';
+      openChat();
+    };
+    $('chatInput').addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();$('chatSendBtn').click();}});
+  }
+  // Kaynak kitap input
+  if($('cBookInput')) initBookInput();
+  $('addClientBtn').onclick=()=>{
+    ['cName','cEmail','cPhone','cSchool','cGoal','cPin','cParentPin'].forEach(id=>$(id).value='');
+    $('cGrade').value='';$('cFee').value='';
+    initBookInput();
+    openM('mClient');
+  };
 }
 
 // ═══ GLOBAL ALIASES (inline onclick için) ═══
