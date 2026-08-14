@@ -3659,6 +3659,30 @@ function swVTab(t){
   $('tabYt').style.background=t==='yt'?'var(--teal)':'var(--cream)';
   $('tabYt').style.color=t==='yt'?'#fff':'var(--ink-soft)';
 }
+// ═══ KAYNAK KİTAP YÖNETİMİ ═══
+let cBookList = [];
+function renderBookTags(books, containerId){
+  const el=$(containerId); if(!el) return;
+  el.innerHTML=books.map(function(b,i){
+    return '<span class="book-tag">'+b+'<button class="rm" data-i="'+i+'">✕</button></span>';
+  }).join('');
+  el.querySelectorAll('.rm').forEach(function(btn){
+    btn.onclick=function(){cBookList.splice(Number(btn.dataset.i),1);renderBookTags(cBookList,containerId);};
+  });
+}
+function initBookInput(){
+  cBookList=[];
+  const tagEl=$('cBookTags');
+  if(tagEl) tagEl.innerHTML='';
+  const inp=$('cBookInput');
+  const btn=$('cBookAddBtn');
+  if(!inp) return;
+  inp.dataset.b='';
+  function addBook(){var v=inp.value.trim();if(!v)return;cBookList.push(v);inp.value='';renderBookTags(cBookList,'cBookTags');}
+  inp.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();addBook();}};
+  if(btn) btn.onclick=addBook;
+}
+
 function bindAll(){
   // LOGIN
   $('btnCoach').onclick=()=>showPanel('Coach');
