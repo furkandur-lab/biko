@@ -262,6 +262,16 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
 
 .sbl-ed{cursor:pointer;}
 .sbl-ed:hover{filter:brightness(1.15);}
+.sched-layout{display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start;}
+.sched-topics-panel{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:14px;position:sticky;top:16px;max-height:calc(100vh - 130px);overflow-y:auto;}
+.sched-grade-sel{width:100%;margin-bottom:10px;font-size:12.5px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--cream);}
+.sched-subject-hd{font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--teal-deep);padding:7px 0 4px;border-bottom:1px solid var(--line);margin-bottom:5px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;}
+.sched-topic-item{padding:5px 9px;margin-bottom:4px;border-radius:8px;font-size:12px;background:var(--cream);border:1.5px solid var(--line);cursor:grab;user-select:none;display:flex;align-items:center;gap:6px;transition:all .12s;}
+.sched-topic-item:hover{background:var(--student-soft);border-color:var(--student);}
+.sched-topic-item.dragging{opacity:.35;border-style:dashed;}
+.sched-color-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.wg-cell-drop-over{background:rgba(47,93,92,.22)!important;outline:2px dashed var(--teal);}
+
 /* DENEME */
 .exam-timer{position:fixed;top:16px;right:16px;z-index:500;background:var(--teal-deep);color:#fff;border-radius:14px;padding:10px 18px;font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.3);display:flex;align-items:center;gap:9px;transition:background .3s;}
 .exam-timer.warn{background:#D4700A;}
@@ -380,11 +390,34 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
     </div>
 
     <div id="page-schedule" class="page">
-      <div class="ph"><div><h1>Program</h1><p>Haftalık/Günlük/Saatlik çalışma programı</p></div><div style="display:flex;gap:7px;"><button class="bg no-print" id="printSchedBtn">🖨 PDF</button><button class="bp no-print" id="addBlockBtn">+ Blok</button></div></div>
-      <div class="card" style="margin-bottom:13px;">
-        <div style="display:flex;gap:9px;align-items:center;margin-bottom:13px;flex-wrap:wrap;"><label style="text-transform:none;font-size:13px;font-weight:600;color:var(--ink);margin:0;">Danışan:</label><select id="schedClient" style="max-width:210px;flex:1;"></select></div>
-        <div class="stabs" id="schedTabs"><div class="stab active" data-v="weekly">Haftalık</div><div class="stab" data-v="daily">Günlük</div><div class="stab" data-v="hourly">Saatlik</div></div>
-        <div class="sleg" id="schedLeg"></div><div id="schedView"></div>
+      <div class="ph">
+        <div><h1>Program</h1><p>Kazanımı sürükleyip saate bırak</p></div>
+        <div style="display:flex;gap:7px;">
+          <button class="bg no-print" id="printSchedBtn">🖨 PDF</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:10px;padding:12px 16px;">
+        <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;">
+          <label style="font-size:13px;font-weight:600;margin:0;">Danışan:</label>
+          <select id="schedClient" style="max-width:220px;flex:1;"></select>
+          <div class="stabs" id="schedTabs" style="margin:0;">
+            <div class="stab active" data-v="weekly">Haftalık</div>
+            <div class="stab" data-v="daily">Günlük</div>
+            <div class="stab" data-v="hourly">Saatlik</div>
+          </div>
+        </div>
+      </div>
+      <div class="sched-layout">
+        <div class="sched-topics-panel">
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--teal-deep);">📚 Kazanımlar</div>
+          <select id="schedGradeSel" class="sched-grade-sel"></select>
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:10px;">Konuyu grid üzerindeki saate sürükleyin</div>
+          <div id="schedTopicsList"></div>
+        </div>
+        <div>
+          <div class="sleg" id="schedLeg"></div>
+          <div id="schedView"></div>
+        </div>
       </div>
     </div>
 
@@ -686,6 +719,58 @@ const MOODS      = {
   stress:{icon:'😤',label:'Stresli',color:'#D4700A'},
   anxiety:{icon:'😰',label:'Kaygılı',color:'#B5434A'}
 };
+
+const GRADE_CURRICULUM = {
+  'TYT': {
+    'Türkçe':['Sözcükte Anlam','Cümlede Anlam','Paragraf','Söz Sanatları','Dil Bilgisi','Yazım Kuralları','Noktalama'],
+    'Matematik':['Temel Kavramlar','Sayı Basamakları','EBOB-EKOK','Rasyonel Sayılar','Yüzde-Faiz','Çarpanlara Ayırma','Denklemler','Eşitsizlikler','Üslü-Köklü','Logaritma','Oran-Orantı','Problemler','Kümeler','Kombinasyon','Olasılık','İstatistik'],
+    'Geometri':['Açılar','Üçgenler','Dörtgenler','Çokgenler','Çember-Daire','Analitik Geometri'],
+    'Fizik':['Kuvvet ve Hareket','Newton Yasaları','Enerji','Dalgalar','Optik','Elektrik'],
+    'Kimya':['Atom','Periyodik Tablo','Kimyasal Bağlar','Mol','Asit-Baz','Organik Kimya Giriş'],
+    'Biyoloji':['Hücre','Mitoz-Mayoz','Kalıtım','Sinir Sistemi','Endokrin','Fotosentez'],
+    'Tarih':['İlk Uygarlıklar','Osmanlı Kuruluş','Osmanlı Yükseliş','Osmanlı Gerileme','Kurtuluş Savaşı'],
+    'Coğrafya':['Harita','İklim','Türkiye Coğrafyası','Nüfus','Ekonomik Coğrafya'],
+    'Felsefe':['Felsefenin Konuları','Bilgi Felsefesi','Ahlak Felsefesi'],
+    'Din Kültürü':['İslamın Şartları','Hz. Muhammed','Kuran','Değerler']
+  },
+  'AYT Sayısal': {
+    'Matematik':['Polinomlar','İkinci Derece Denklem','Karmaşık Sayılar','Trigonometri','Logaritma','Diziler','Limit','Türev','İntegral','Permütasyon','Kombinasyon','Olasılık','İstatistik','Analitik Geometri','Vektörler'],
+    'Geometri':['Katı Cisimler','Analitik Geometri','Çember ve Doğru','Trigonometrik Fonksiyonlar'],
+    'Fizik':['Kuvvet-Hareket','Newton Yasaları','Enerji-Momentum','Basit Harmonik Hareket','Dalgalar','Optik','Elektrostatik','Manyetizma','Modern Fizik'],
+    'Kimya':['Atom Modelleri','Kimyasal Hesaplamalar','Gazlar','Çözeltiler','Kimyasal Denge','Elektrokimya','Organik Kimya'],
+    'Biyoloji':['Hücre Bölünmesi','Kalıtım','DNA-RNA','Biyoteknoloji','Sinir Sistemi','Ekosistem','Evrim']
+  },
+  'AYT Eşit Ağırlık': {
+    'Türk Dili ve Edebiyatı':['Şiir Bilgisi','Halk Edebiyatı','Divan Edebiyatı','Tanzimat','Servet-i Fünun','Milli Edebiyat','Cumhuriyet Dönemi','Roman Çözümleme'],
+    'Tarih':['Osmanlı Tarihi','Kurtuluş Savaşı','Cumhuriyet Tarihi','Atatürk İlkeleri'],
+    'Coğrafya':['Türkiye Coğrafyası','Beşeri Coğrafya','Küresel Çevre'],
+    'Matematik':['Polinomlar','Trigonometri','Logaritma','Diziler','Türev Giriş']
+  },
+  'AYT Sözel': {
+    'Türk Dili ve Edebiyatı':['Şiir Tahlili','Roman-Hikaye','Tiyatro','Edebi Akımlar','Yazarlar-Eserleri','Dil Bilgisi İleri'],
+    'Tarih':['Osmanlı Kuruluş-Yükseliş','Osmanlı Gerileme-Çöküş','Kurtuluş Savaşı','Cumhuriyet Tarihi','Dünya Tarihi'],
+    'Coğrafya':['Doğal Sistemler','Beşeri Sistemler','Türkiye Coğrafyası','Bölgesel Coğrafya'],
+    'Felsefe':['Felsefeye Giriş','Bilgi Felsefesi','Varlık Felsefesi','Ahlak Felsefesi','Siyaset Felsefesi','Din Felsefesi']
+  },
+  '9. Sınıf':{'Matematik':['Kümeler','Denklemler','Eşitsizlikler','Üçgenler','Dörtgenler','İstatistik'],'Türkçe':['Sözcükte Anlam','Cümlede Anlam','Metin Türleri','Yazım'],'Fizik':['Madde ve Özellikleri','Hareket','Kuvvet'],'Kimya':['Atom','Periyodik Sistem','Kimyasal Bağlar'],'Biyoloji':['Hücre','Canlıların Sınıflandırılması'],'Tarih':['Tarih Bilimi','İlk Uygarlıklar'],'Coğrafya':['Harita','İklim'],'İngilizce':['Greetings','Daily Routines','Travel']},
+  '10. Sınıf':{'Matematik':['İkinci Dereceden Denklem','Fonksiyonlar','Üslü-Köklü','Trigonometri Giriş','Analitik Geometri Giriş','İstatistik'],'Türkçe':['Paragraf','Söz Sanatları','Dil Bilgisi','Edebiyat Türleri'],'Fizik':['Newton Yasaları','Enerji','Dalgalar'],'Kimya':['Kimyasal Tepkimeler','Asitler-Bazlar','Organik Giriş'],'Biyoloji':['Hücre Bölünmesi','Kalıtım Giriş','Ekosistem'],'Tarih':['Osmanlı Kuruluş','Osmanlı Yükseliş','Coğrafi Keşifler'],'Coğrafya':['Fiziki Coğrafya','Nüfus','Tarım'],'İngilizce':['Tenses Review','Reading','Essay Writing']},
+  '11. Sınıf':{'Matematik':['Türev','İntegral Giriş','Logaritma','Diziler','Kombinasyon'],'Türkçe':['İleri Paragraf','Edebiyat Akımları','Divan Edebiyatı'],'Fizik':['Elektrostatik','Manyetizma','Optik','Modern Fizik'],'Kimya':['Gazlar','Çözeltiler','Kimyasal Denge','Elektrokimya'],'Biyoloji':['DNA ve Genetik','Biyoteknoloji','Sinir Sistemi'],'Tarih':['Osmanlı Gerileme','Sanayi Devrimi','I. Dünya Savaşı'],'Coğrafya':['Ekonomik Faaliyetler','Sanayi','Ulaşım'],'İngilizce':['Advanced Grammar','Critical Reading','Academic Writing']},
+  '12. Sınıf':{'Matematik':['İntegral','Analitik Geometri','Vektörler','Olasılık-İstatistik','TYT Tarama'],'Türkçe':['Cumhuriyet Edebiyatı','Roman Tahlili','Paragraf Pekiştirme','TYT Tarama'],'Fizik':['Tüm Konular Tarama','Soru Çözüm Teknikleri'],'Kimya':['Organik Kimya','Tüm Konular Tarama'],'Biyoloji':['Evrim','Ekosistem','Tüm Konular Tarama'],'Tarih':['Kurtuluş Savaşı','Cumhuriyet Tarihi','Atatürk İlkeleri'],'Coğrafya':['Bölgesel Coğrafya','Tüm Konular Tarama'],'İngilizce':['YDS Hazırlık','Okuma Parçaları','Çeviri']}
+};
+const GRADE_KEYS=['9. Sınıf','10. Sınıf','11. Sınıf','12. Sınıf','TYT','AYT Sayısal','AYT Eşit Ağırlık','AYT Sözel'];
+function getGradeKey(grade){
+  if(!grade) return 'TYT';
+  const g=grade.toLowerCase();
+  if(g.includes('9')) return '9. Sınıf';
+  if(g.includes('10')) return '10. Sınıf';
+  if(g.includes('11')) return '11. Sınıf';
+  if(g.includes('12')) return '12. Sınıf';
+  if(g.includes('tyt')) return 'TYT';
+  if(g.includes('sayısal')||g.includes('mf')) return 'AYT Sayısal';
+  if(g.includes('eşit')||g.includes('tm')) return 'AYT Eşit Ağırlık';
+  if(g.includes('sözel')||g.includes('ts')) return 'AYT Sözel';
+  return 'TYT';
+}
 const SPACED = 2;
 const STATUS_LBLS = ['Anlatılmadı','Tekrar Gerekiyor','Pekişti'];
 
@@ -828,6 +913,54 @@ function buildRepHTML(c){
 }
 
 // ═══ SCHEDULE HELPERS ═══
+function buildTopicsPanel(){
+  const c=getSchC();
+  const gsel=$('schedGradeSel');
+  if(!gsel) return;
+  if(!gsel.dataset.b){
+    gsel.innerHTML=GRADE_KEYS.map(k=>`<option value="${k}">${k}</option>`).join('');
+    if(c) gsel.value=getGradeKey(c.grade);
+    gsel.addEventListener('change',buildTopicsPanel);
+    gsel.dataset.b='1';
+  }
+  const gradeKey=gsel.value||(c?getGradeKey(c.grade):'TYT');
+  const topics=GRADE_CURRICULUM[gradeKey]||{};
+  const list=$('schedTopicsList');
+  if(!list) return;
+  const SC={'Matematik':'#2F5D5C','Geometri':'#1F4140','Türkçe':'#C9764A',
+    'Türk Dili ve Edebiyatı':'#B5434A','Fizik':'#4A5FC9','Kimya':'#7C5CBF',
+    'Biyoloji':'#5C8A5C','Tarih':'#D4700A','Coğrafya':'#2E7D32',
+    'Felsefe':'#6D4C41','İngilizce':'#0277BD','Din Kültürü':'#558B2F'};
+  list.innerHTML='';
+  Object.entries(topics).forEach(([subject,kazanimlar])=>{
+    const color=SC[subject]||'#2F5D5C';
+    const hd=document.createElement('div');
+    hd.className='sched-subject-hd';
+    hd.innerHTML=`<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:5px;vertical-align:middle;"></span>${subject}</span><span>▾</span>`;
+    const grp=document.createElement('div');
+    kazanimlar.forEach(kaz=>{
+      const item=document.createElement('div');
+      item.className='sched-topic-item';
+      item.draggable=true;
+      item.innerHTML=`<span class="sched-color-dot" style="background:${color};"></span>${kaz}`;
+      item.addEventListener('dragstart',ev=>{
+        item.classList.add('dragging');
+        ev.dataTransfer.effectAllowed='copy';
+        ev.dataTransfer.setData('text/plain',JSON.stringify({subject,topic:kaz,color}));
+      });
+      item.addEventListener('dragend',()=>item.classList.remove('dragging'));
+      grp.appendChild(item);
+    });
+    hd.onclick=()=>{
+      const col=grp.style.display==='none';
+      grp.style.display=col?'':'none';
+      hd.querySelector('span:last-child').textContent=col?'▾':'▸';
+    };
+    list.appendChild(hd);
+    list.appendChild(grp);
+  });
+}
+
 function drawLeg(c,elId){
   const s={};(c.schedule||[]).forEach(b=>{s[b.color]=b.subject;});
   $(elId).innerHTML=Object.entries(s).map(([col,sub])=>`<div class="lgi"><div class="lgd" style="background:${col};"></div>${sub}</div>`).join('');
@@ -835,19 +968,80 @@ function drawLeg(c,elId){
 const RH=40;
 function drawWG(c,elId,ed){
   const bl=c.schedule||[];
-  let h=`<div style="overflow-x:auto;"><div class="wg" style="min-width:450px;"><div class="wgh"></div>${DAYS_S.map(d=>`<div class="wgh">${d}</div>`).join('')}`;
+  let h=`<div style="overflow-x:auto;"><div class="wg" style="min-width:450px;">
+    <div class="wgh"></div>${DAYS_S.map(d=>`<div class="wgh">${d}</div>`).join('')}`;
   HOURS.forEach(hr=>{
     h+=`<div class="wgc tl">${String(hr).padStart(2,'0')}:00</div>`;
     for(let day=0;day<7;day++){
       const db=bl.filter(b=>b.day===day&&Math.floor(tMin(b.start)/60)===hr);
       let cc='';
-      db.forEach(b=>{const dur=(tMin(b.end)-tMin(b.start))/60;const top=(tMin(b.start)%60)/60*RH;const ht=Math.max(dur*RH-3,16);cc+=`<div class="sbl${ed?' sbl-ed':''}" data-bid="${b.id}" style="background:${b.color};top:${top+2}px;height:${ht}px;"><div class="sblt">${b.subject}</div><div class="sbls">${b.start}-${b.end}</div></div>`;});
-      h+=`<div class="wgc" data-day="${day}" data-hour="${hr}" style="height:${RH}px;">${cc}</div>`;
+      db.forEach(b=>{
+        const dur=(tMin(b.end)-tMin(b.start))/60;
+        const top=(tMin(b.start)%60)/60*RH;
+        const ht=Math.max(dur*RH-3,16);
+        cc+=`<div class="sbl${ed?' sbl-ed':''}" data-bid="${b.id}" style="background:${b.color};top:${top+2}px;height:${ht}px;">
+          <div class="sblt">${b.subject}</div>
+          <div class="sbls">${b.start}-${b.end}</div>
+        </div>`;
+      });
+      h+=`<div class="wgc wg-cell-drop" data-day="${day}" data-hour="${hr}" style="height:${RH}px;">${cc}</div>`;
     }
   });
   h+=`</div></div>`;
-  $(elId).innerHTML=h;
+  const wrap=$(elId);
+  wrap.innerHTML=h;
+
+  if(!ed) return;
+
+  // Drag & Drop: hücrelere bırakma
+  wrap.querySelectorAll('.wg-cell-drop').forEach(cell=>{
+    cell.addEventListener('dragover',ev=>{
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect='copy';
+      cell.classList.add('wg-cell-drop-over');
+    });
+    cell.addEventListener('dragleave',()=>cell.classList.remove('wg-cell-drop-over'));
+    cell.addEventListener('drop',ev=>{
+      ev.preventDefault();
+      cell.classList.remove('wg-cell-drop-over');
+      try{
+        const data=JSON.parse(ev.dataTransfer.getData('text/plain'));
+        const day=Number(cell.dataset.day);
+        const hr=Number(cell.dataset.hour);
+        // Tıklanan y pozisyonundan dakikayı hesapla
+        const rect=cell.getBoundingClientRect();
+        const relY=ev.clientY-rect.top;
+        const fracMin=Math.round((relY/RH)*60/15)*15; // 15dk hassasiyet
+        const startMin=hr*60+Math.min(fracMin,45);
+        const startT=mToT(startMin);
+        const endT=mToT(startMin+60); // varsayılan 1 saat
+        // Mevcut blok var mı kontrol (çakışma)
+        const exists=c.schedule.some(b=>b.day===day&&tMin(b.start)<startMin+60&&tMin(b.end)>startMin);
+        if(exists){
+          // Çakışıyorsa sona ekle
+          const lastEnd=Math.max(...c.schedule.filter(b=>b.day===day).map(b=>tMin(b.end)),hr*60);
+          if(lastEnd+60>24*60){alert('Bu güne daha fazla blok eklenemiyor.');return;}
+          c.schedule.push({id:Date.now(),day,start:mToT(lastEnd),end:mToT(lastEnd+60),subject:data.subject,note:data.topic,color:data.color,autoAdded:false});
+        } else {
+          c.schedule.push({id:Date.now(),day,start:startT,end:endT,subject:data.subject,note:data.topic,color:data.color,autoAdded:false});
+        }
+        save();
+        drawSchView();
+      }catch(err){console.error('Drop error:',err);}
+    });
+  });
+
+  // Tıklama: mevcut blok düzenle / boş hücre ekle
+  wrap.onclick=ev=>{
+    const bl2=ev.target.closest('.sbl-ed');
+    if(bl2){ev.stopPropagation();openSchedM(Number(bl2.dataset.bid));return;}
+    const btn=ev.target.closest('.sched-edit-btn');
+    if(btn){openSchedM(Number(btn.dataset.bid));return;}
+    const cell=ev.target.closest('.wg-cell-drop:not(.tl)');
+    if(cell) openSchedM(null,Number(cell.dataset.day),String(cell.dataset.hour).padStart(2,'0')+':00');
+  };
 }
+
 function drawDL(c,elId,ed){
   const bl=c.schedule||[]; const wrap=$(elId);
   if(!bl.length){wrap.innerHTML='<div class="empty">Blok yok.</div>';return;}
@@ -1250,7 +1444,7 @@ function rSched(){
   sel.innerHTML=state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   if(state.clients.some(c=>String(c.id)===prev)) sel.value=prev;
   else if(state.clients.length) sel.value=state.clients[0].id;
-  if(!sel.dataset.b){sel.addEventListener('change',drawSchView);sel.dataset.b='1';}
+  if(!sel.dataset.b){sel.addEventListener('change',()=>{drawSchView();buildTopicsPanel();});sel.dataset.b='1';}
   drawSchView();
 }
 function drawSchView(){
@@ -1260,13 +1454,7 @@ function drawSchView(){
   if(schedView==='weekly') drawWG(c,'schedView',true);
   else if(schedView==='daily') drawDL(c,'schedView',true);
   else drawHL(c,'schedView',true);
-  // Event delegation for schedule blocks and cells
-  const sv=$('schedView');
-  sv.onclick=ev=>{
-    const bl=ev.target.closest('.sbl-ed'); if(bl){ev.stopPropagation();openSchedM(Number(bl.dataset.bid));return;}
-    const btn=ev.target.closest('.sched-edit-btn'); if(btn){openSchedM(Number(btn.dataset.bid));return;}
-    const cell=ev.target.closest('.wgc:not(.tl)'); if(cell) openSchedM(null,Number(cell.dataset.day),String(cell.dataset.hour).padStart(2,'0')+':00');
-  };
+  // onclick handled inside drawWG/drawDL
 }
 
 function rAssCoach(){
@@ -2705,8 +2893,8 @@ function bindAll(){
     runSR(c); closeM('mExam'); rerender();
   };
   // SCHEDULE
-  document.querySelectorAll('#schedTabs .stab').forEach(tab=>{tab.onclick=()=>{schedView=tab.dataset.v;document.querySelectorAll('#schedTabs .stab').forEach(t=>t.classList.toggle('active',t===tab));drawSchView();};});
-  $('addBlockBtn').onclick=()=>openSchedM(null);
+  // schedTabs binding rSched() içinde yapılıyor
+  // addBlockBtn kaldırıldı - drag&drop ile ekleniyor
   $('printSchedBtn').onclick=()=>{const c=getSchC();if(c)printSched(c);};
   $('stPrintSched').onclick=()=>{const c=getAC();if(c)printSched(c);};
   $('saveSchedBtn').onclick=()=>{
