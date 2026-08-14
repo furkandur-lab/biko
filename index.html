@@ -409,9 +409,8 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
       </div>
       <div class="sched-layout">
         <div class="sched-topics-panel">
-          <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--teal-deep);">📚 Kazanımlar</div>
-          <select id="schedGradeSel" class="sched-grade-sel"></select>
-          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:10px;">Konuyu grid üzerindeki saate sürükleyin</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:var(--teal-deep);">📚 Kazanımlar</div>
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:10px;padding:5px 8px;background:var(--cream);border-radius:7px;" id="schedGradeLabel">Danışan seçin</div>
           <div id="schedTopicsList"></div>
         </div>
         <div>
@@ -720,47 +719,592 @@ const MOODS      = {
   anxiety:{icon:'😰',label:'Kaygılı',color:'#B5434A'}
 };
 
+
 const GRADE_CURRICULUM = {
+  '9. Sınıf': {
+    'Türkçe': [
+      'Sözcükte Anlam','Cümlede Anlam','Kelime Grupları',
+      'Cümle Türleri','Fiilimsi','Bağlaçlar','Noktalama İşaretleri',
+      'Büyük Harf Kullanımı','Ses Bilgisi','Heceleme',
+      'Metin Türleri: Anlatı','Metin Türleri: Açıklama',
+      'Hikaye Analizi','Şiir Analizi','Deneme'
+    ],
+    'Matematik': [
+      'Küme Kavramı','Küme İşlemleri','Sayı Kümeleri',
+      'Gerçek Sayılar','Mutlak Değer','Üslü İfadeler',
+      'Köklü İfadeler','Çarpanlara Ayırma',
+      'Birinci Dereceden Denklemler','Birinci Dereceden Eşitsizlikler',
+      'Koordinat Sistemi','Doğru Denklemi',
+      'Oran-Orantı','Yüzde Hesapları','Veri Analizi','Olasılığa Giriş'
+    ],
+    'Türkiye Cumhuriyeti İnkılap Tarihi': [
+      'Tarih Bilimine Giriş','Tarih Öncesi Çağlar',
+      'İlk Türk Devletleri','İslamiyet Öncesi Türk Kültürü',
+      'İslamiyet ve Türkler','Büyük Selçuklu Devleti',
+      'Anadolu Selçukluları','Beylikler Dönemi'
+    ],
+    'Fizik': [
+      'Fizik Bilimine Giriş','Ölçme ve Birim Sistemleri',
+      'Vektörler','Madde ve Özellikleri',
+      'Kuvvet ve Hareket','Hareket Çeşitleri',
+      'Newton Hareket Yasaları','Sürtünme Kuvveti',
+      'İş-Güç-Enerji','Enerji Korunumu'
+    ],
+    'Kimya': [
+      'Kimya Bilimi','Atom Tarihi ve Dalton Modeli',
+      'Modern Atom Teorisi','Elektron Dizilimi',
+      'Periyodik Sistem','Kimyasal Türler Arası Etkileşimler',
+      'Maddenin Halleri','Karışımlar',
+      'Asitler ve Bazlar Giriş','Kimyasal Reaksiyonlar Giriş'
+    ],
+    'Biyoloji': [
+      'Yaşam Bilimi Biyoloji','Canlıların Ortak Özellikleri',
+      'Canlıların Sınıflandırılması','Hücre: Yapı ve Organeller',
+      'Hücre Zarından Madde Geçişi','Canlılar Alemi: Prokaryotlar',
+      'Protistler','Mantarlar','Bitkiler Alemi','Hayvanlar Alemi'
+    ],
+    'Coğrafya': [
+      'Doğa ve İnsan','Harita Bilgisi ve Koordinatlar',
+      'Atmosfer ve İklim','İklim Tipleri',
+      'Su Kaynakları','Toprak Oluşumu',
+      'Bitki Örtüsü','Nüfus','Yerleşim Yerleri'
+    ],
+    'Felsefe': [
+      'Felsefeye Giriş','Bilgi Felsefesi',
+      'Varlık Felsefesi','Ahlak Felsefesi',
+      'Sanat Felsefesi','Din Felsefesi',
+      'Siyaset Felsefesi'
+    ],
+    'Din Kültürü ve Ahlak Bilgisi': [
+      'Yaratılış','Hz. Adem ve İlk İnsanlar',
+      'Peygamberlik','Kutsal Kitaplar',
+      'İbadet','Ahlak ve Değerler'
+    ],
+    'İngilizce': [
+      'Friendship','Human in Nature',
+      'Torrents of History','Science Fiction',
+      'Inspirational People','Bridging Cultures',
+      'Behind The Wheel','Sports','Future Jobs'
+    ]
+  },
+  '10. Sınıf': {
+    'Türk Dili ve Edebiyatı': [
+      'Edebi Metin Kavramı','Şiir Türleri ve Özellikleri',
+      'Ses ve Ahenk Unsurları','Ölçü','Nazım Şekilleri',
+      'İslamiyet Öncesi Türk Edebiyatı','Geçiş Dönemi Eserleri',
+      'Divan Edebiyatı Genel Özellikleri','Divan Nazım Şekilleri',
+      'Halk Edebiyatı','Halk Şiiri','Tekke Edebiyatı',
+      'Anlatmaya Bağlı Türler','Göstermeye Bağlı Türler',
+      'Göstermeye Bağlı Edebi Metinler'
+    ],
+    'Matematik': [
+      'İkinci Dereceden Denklemler','Fonksiyonlar',
+      'Fonksiyon Çeşitleri','Polinomlar',
+      'Üslü Fonksiyonlar','Logaritmik Fonksiyonlar',
+      'Trigonometri: Açı Ölçüleri','Trigonometri: Temel Kavramlar',
+      'Trigonometrik Denklemler',
+      'Analitik Geometri: Nokta ve Doğru',
+      'Çember','İstatistik','Olasılık Giriş'
+    ],
+    'Tarih': [
+      'Osmanlı Devleti Kuruluş','Osmanlı Yükseliş Dönemi',
+      'Kanuni Sultan Süleyman Dönemi','Osmanlı Gerileme',
+      'Osmanlı-Avrupa İlişkileri','Coğrafi Keşifler',
+      'Rönesans ve Reform','XVII. Yüzyıl Osmanlı',
+      'Lale Devri ve Tanzimat Öncesi','Osmanlı Toprak Kayıpları'
+    ],
+    'Fizik': [
+      'Newton Yasaları (İleri)','İtme-Momentum',
+      'Düzgün Dairesel Hareket','Açısal Hareket',
+      'Basit Harmonik Hareket','Yerçekimi',
+      'Elektrostatik: Coulomb Yasası','Elektrik Alanı',
+      'Elektrik Potansiyeli','Kondansatörler','Akım Elektriği Giriş'
+    ],
+    'Kimya': [
+      'Kimyasal Hesaplamalar','Mol Kavramı',
+      'Kimyasal Reaksiyonlar','Denklem Denkleştirme',
+      'Asitler ve Bazlar','pH Hesaplamaları',
+      'Tuzlar','Çözünürlük','Kimyasal Denge Giriş',
+      'Gazlar: Boyle ve Charles Yasası'
+    ],
+    'Biyoloji': [
+      'Hücre Bölünmeleri: Mitoz','Hücre Bölünmeleri: Mayoz',
+      'Eşeyli ve Eşeysiz Üreme','Mendelci Kalıtım',
+      'Kan Grupları Kalıtımı','Cinsiyet Bağlantılı Kalıtım',
+      'Ekosistem ve Madde Döngüleri','Biyoçeşitlilik',
+      'Sinir Sistemi Giriş','Duyu Organları'
+    ],
+    'Coğrafya': [
+      'Türkiye Fiziki Coğrafyası','Türkiye İklimi',
+      'Türkiye Toprakları ve Bitki Örtüsü',
+      'Türkiye Nüfusu','Türkiye Göç Hareketleri',
+      'Türkiye Tarım Coğrafyası','Türkiye Hayvancılık',
+      'Türkiye Maden ve Enerji Kaynakları',
+      'Türkiye Sanayi','Türkiye Ulaşım'
+    ],
+    'Felsefe': [
+      'Bilgi Felsefesi (İleri)','Bilim Felsefesi',
+      'Mantık','Kavram-Önerme-Akıl Yürütme',
+      'Tümevarım-Tümdengelim','Safsatalar'
+    ],
+    'İngilizce': [
+      'School Life','Environmental Problems',
+      'Legendary Figures','Innovations',
+      'Tourism','Television and Social Media',
+      'Natural Disasters','Shopping'
+    ]
+  },
+  '11. Sınıf': {
+    'Türk Dili ve Edebiyatı': [
+      'Tanzimat Edebiyatı (1. Dönem)','Tanzimat Edebiyatı (2. Dönem)',
+      'Servet-i Fünun Edebiyatı','Servet-i Fünun Romanı',
+      'Fecr-i Ati','Milli Edebiyat Dönemi',
+      'Ziya Gökalp','Mehmet Akif Ersoy','Yahya Kemal Beyatlı',
+      'Milli Edebiyat Romanı','Milli Edebiyat Şiiri',
+      'Göstermeye Bağlı Metinler','Öğretici Metinler'
+    ],
+    'Matematik': [
+      'Diziler: Aritmetik Dizi','Diziler: Geometrik Dizi',
+      'Seriler','Permütasyon','Kombinasyon',
+      'Binom Açılımı','Olasılık',
+      'Türev: Limit ve Süreklilik','Türev Kavramı',
+      'Türev Alma Kuralları','Türevin Uygulamaları',
+      'Fonksiyon Grafiği Çizimi','İntegral: Belirsiz İntegral',
+      'İntegral: Belirli İntegral','İntegralin Uygulamaları'
+    ],
+    'Tarih': [
+      'Osmanlı Dağılma Dönemi','XIX. Yüzyıl Islahatları',
+      'Tanzimat Dönemi','Meşrutiyet','İttihat ve Terakki',
+      'Balkan Savaşları','I. Dünya Savaşı',
+      'Mondros Mütarekesi','Milli Mücadele Hazırlık',
+      'Kurtuluş Savaşı Cepheleri','Lozan Antlaşması'
+    ],
+    'Fizik': [
+      'Elektrik Devreleri','Manyetik Alan',
+      'Elektromanyetik İndüksiyon','Alternatif Akım',
+      'Optik: Aydınlanma','Aynalar',
+      'Mercekler','Dalga Optiği',
+      'Modern Fizik: Fotoelektrik','Radyoaktivite',
+      'Çekirdek Reaksiyonları'
+    ],
+    'Kimya': [
+      'Kimyasal Kinetik','Kimyasal Denge',
+      'Asit-Baz Dengesi','Çözünürlük Dengesi',
+      'Elektrokimya: Galvanik Pil','Elektroliz',
+      'Organik Kimya: Sınıflandırma',
+      'Hidrokarbonlar','Fonksiyonlu Bileşikler',
+      'Polimer Kimyası'
+    ],
+    'Biyoloji': [
+      'Sinir Sistemi','Endokrin Sistem',
+      'Destek ve Hareket Sistemi','Sindirim Sistemi',
+      'Dolaşım Sistemi','Solunum Sistemi',
+      'Boşaltım Sistemi','Üreme ve Gelişme',
+      'DNA ve Genetik Kod','Protein Sentezi',
+      'Biyoteknoloji ve Genetik Mühendislik'
+    ],
+    'Coğrafya': [
+      'Beşeri Sistemler','Küreselleşme',
+      'Kalkınma ve Kalkınmışlık','Nüfus Politikaları',
+      'Küresel Çevre Sorunları','Çevre Politikaları',
+      'Doğal Afetler','Enerji Kaynakları',
+      'Bölgesel Coğrafya: Avrupa',
+      'Bölgesel Coğrafya: Asya'
+    ],
+    'İngilizce': [
+      'Future Jobs','Hobbies and Skills',
+      'Hard Times','What a Life!',
+      'Back to the Future','Open Your Heart',
+      'Facts About Turkey','Digital World'
+    ]
+  },
+  '12. Sınıf': {
+    'Türk Dili ve Edebiyatı': [
+      'Cumhuriyet Dönemi (1923-1940)','Toplumcu Gerçekçilik',
+      'Milli Edebiyat Anlayışı (Devam)','Garip Hareketi',
+      'İkinci Yeni','1950 Sonrası Türk Şiiri',
+      'Cumhuriyet Dönemi Romanı','1950 Sonrası Roman',
+      'Cumhuriyet Dönemi Hikayesi','Tiyatro',
+      'Deneme-Makale-Eleştiri','Genel Tekrar'
+    ],
+    'Matematik': [
+      'Logaritma (Tekrar)','Türev (Tekrar)',
+      'İntegral (Tekrar)','Analitik Geometri: Doğru',
+      'Analitik Geometri: Çember','Konikler',
+      'Uzayda Analitik Geometri','Vektörler',
+      'Diziler (Tekrar)','Olasılık (Tekrar)',
+      'İstatistik (Tekrar)','TYT Genel Tekrar'
+    ],
+    'T.C. İnkılap Tarihi ve Atatürkçülük': [
+      'Kurtuluş Savaşı Siyasi Gelişmeler',
+      'Lozan Barış Konferansı',
+      'Siyasi Alanda Yapılan İnkılaplar',
+      'Hukuk Alanında Yapılan İnkılaplar',
+      'Sosyal Alanda Yapılan İnkılaplar',
+      'Eğitim ve Kültür Alanında İnkılaplar',
+      'Ekonomi Alanında İnkılaplar',
+      'Atatürk İlkeleri','Atatürk Dönemi Türk Dış Politikası',
+      'İkinci Dünya Savaşı ve Türkiye',
+      'Soğuk Savaş Dönemi','Çok Partili Hayata Geçiş'
+    ],
+    'Fizik': [
+      'Tüm Konular Özet: Hareket','Tüm Konular Özet: Kuvvet',
+      'Tüm Konular Özet: Enerji','Tüm Konular Özet: Dalga',
+      'Tüm Konular Özet: Elektrik','Tüm Konular Özet: Optik',
+      'Modern Fizik Özet','AYT Soru Teknikleri'
+    ],
+    'Kimya': [
+      'Tüm Konular Özet: Atom','Tüm Konular Özet: Kimyasal Hesap',
+      'Tüm Konular Özet: Denge','Tüm Konular Özet: Organik',
+      'Kimya TYT Tarama','Kimya AYT Tarama'
+    ],
+    'Biyoloji': [
+      'Tüm Sistemler Tekrar','Kalıtım Tekrar',
+      'Ekoloji: Ekosistem','Ekoloji: Madde Döngüleri',
+      'Evrim Teorisi','Evrim Kanıtları',
+      'Biyoloji TYT Tarama','Biyoloji AYT Tarama'
+    ],
+    'Coğrafya': [
+      'Bölgesel Coğrafya: Amerika','Bölgesel Coğrafya: Afrika',
+      'Bölgesel Coğrafya: Avustralya',
+      'Küresel Sorunlar ve Çözüm Önerileri',
+      'Coğrafya TYT Tarama'
+    ],
+    'İngilizce': [
+      'Equality','Forensic Science',
+      'Life','Language and Communication',
+      'Psychology','Space','Global Warming','Art'
+    ]
+  },
   'TYT': {
-    'Türkçe':['Sözcükte Anlam','Cümlede Anlam','Paragraf','Söz Sanatları','Dil Bilgisi','Yazım Kuralları','Noktalama'],
-    'Matematik':['Temel Kavramlar','Sayı Basamakları','EBOB-EKOK','Rasyonel Sayılar','Yüzde-Faiz','Çarpanlara Ayırma','Denklemler','Eşitsizlikler','Üslü-Köklü','Logaritma','Oran-Orantı','Problemler','Kümeler','Kombinasyon','Olasılık','İstatistik'],
-    'Geometri':['Açılar','Üçgenler','Dörtgenler','Çokgenler','Çember-Daire','Analitik Geometri'],
-    'Fizik':['Kuvvet ve Hareket','Newton Yasaları','Enerji','Dalgalar','Optik','Elektrik'],
-    'Kimya':['Atom','Periyodik Tablo','Kimyasal Bağlar','Mol','Asit-Baz','Organik Kimya Giriş'],
-    'Biyoloji':['Hücre','Mitoz-Mayoz','Kalıtım','Sinir Sistemi','Endokrin','Fotosentez'],
-    'Tarih':['İlk Uygarlıklar','Osmanlı Kuruluş','Osmanlı Yükseliş','Osmanlı Gerileme','Kurtuluş Savaşı'],
-    'Coğrafya':['Harita','İklim','Türkiye Coğrafyası','Nüfus','Ekonomik Coğrafya'],
-    'Felsefe':['Felsefenin Konuları','Bilgi Felsefesi','Ahlak Felsefesi'],
-    'Din Kültürü':['İslamın Şartları','Hz. Muhammed','Kuran','Değerler']
+    'Türkçe': [
+      'Sözcükte Anlam: Gerçek-Mecaz Anlam',
+      'Sözcükte Anlam: Eş-Yakın-Zıt Anlam',
+      'Sözcükte Anlam: Deyim ve Atasözleri',
+      'Sözcükte Anlam: İkilemeler ve Bağlaçlar',
+      'Cümlede Anlam: Öznel-Nesnel',
+      'Cümlede Anlam: Neden-Sonuç',
+      'Cümlede Anlam: Koşul-Amaç-Karşıtlık',
+      'Paragraf: Ana Düşünce','Paragraf: Yardımcı Düşünce',
+      'Paragraf: Başlık Bulma','Paragraf: Boşluk Doldurma',
+      'Paragraf: Sıralama','Paragraf: Özetleme',
+      'Dil Bilgisi: Ses Bilgisi','Dil Bilgisi: Yapı Bilgisi',
+      'Dil Bilgisi: Sözcük Türleri','Dil Bilgisi: Cümle Türleri',
+      'Dil Bilgisi: Fiilimsi','Yazım Kuralları','Noktalama'
+    ],
+    'Matematik (TYT)': [
+      'Sayılar: Doğal Sayılar','Sayılar: Tam Sayılar',
+      'Sayılar: Rasyonel Sayılar','Sayılar: İrrasyonel Sayılar',
+      'Sayı Basamakları','EBOB-EKOK','Bölme ve Bölünebilme',
+      'Asal Sayılar','Üslü Sayılar','Köklü Sayılar',
+      'Yüzde Hesapları','Faiz Hesapları',
+      'Oran-Orantı','Hız-Mesafe-Zaman',
+      'İşçi-Havuz Problemleri','Karışım Problemleri',
+      'Yaş Problemleri','Birinci Dereceden Denklemler',
+      'Eşitsizlikler','Mutlak Değer',
+      'Çarpanlara Ayırma','Fonksiyonlar Giriş',
+      'Kümeler','Sayma Problemleri',
+      'Kombinasyon Giriş','Olasılık Giriş',
+      'Veri: Tablo ve Grafik','İstatistik Giriş'
+    ],
+    'Geometri (TYT)': [
+      'Temel Kavramlar: Nokta-Doğru-Düzlem',
+      'Açılar','Doğrular: Paralel-Dik',
+      'Üçgen: Temel Özellikler',
+      'Üçgende Açı-Kenar Bağıntıları',
+      'Üçgende Özel Noktalar',
+      'Üçgende Alan','Dik Üçgen ve Pisagor',
+      'Özel Üçgenler (30-60-90 ve 45-45-90)',
+      'Çokgenler','Dörtgenler: Paralelkenar',
+      'Dörtgenler: Dikdörtgen-Kare-Eşkenar Dörtgen',
+      'Dörtgenler: Yamuk','Çember ve Daire',
+      'Çemberde Açılar','Çemberde Uzunluk',
+      'Analitik Geometri: Koordinat Sistemi',
+      'Analitik Geometri: Nokta ve Doğru',
+      'Katı Cisimler: Prizma-Piramit',
+      'Katı Cisimler: Silindir-Koni-Küre'
+    ],
+    'Fizik (TYT)': [
+      'Fizik Bilimine Giriş','Madde ve Özellikleri',
+      'Hareket: Konum-Hız-İvme',
+      'Düzgün Doğrusal Hareket',
+      'Düzgün İvmeli Hareket','Serbest Düşme',
+      'Eğik Atış','Newton Yasaları',
+      'Sürtünme Kuvveti','İş-Güç-Enerji',
+      'Basınç: Katı Basıncı','Basınç: Sıvı Basıncı',
+      'Kaldırma Kuvveti','Isı ve Sıcaklık',
+      'Isı Alışverişi','Genleşme',
+      'Elektrik: Temel Kavramlar',
+      'Dalgalar: Temel Özellikler',
+      'Ses Dalgaları','Optik Giriş'
+    ],
+    'Kimya (TYT)': [
+      'Kimya Bilimi ve Yöntem',
+      'Atom: Temel Parçacıklar',
+      'Atom: Thomson ve Rutherford Modeli',
+      'Modern Atom Teorisi: Bohr',
+      'Periyodik Sistem: Periyot ve Grup',
+      'Periyodik Özellikler',
+      'Kimyasal Türler ve Bağlar',
+      'Kimyasal Reaksiyonlar','Mol Hesapları',
+      'Asit ve Baz Giriş','Karışımlar',
+      'Maddenin Halleri','Çözeltiler',
+      'Tepkime Hızı Giriş','Kimyasal Denge Giriş'
+    ],
+    'Biyoloji (TYT)': [
+      'Biyoloji Bilimi','Canlıların Temel Bileşenleri',
+      'Hücre: Yapı ve Organeller',
+      'Hücre Zarından Madde Taşınması',
+      'Hücre Bölünmesi: Mitoz',
+      'Hücre Bölünmesi: Mayoz',
+      'Canlılar Alemi','Kalıtım Temelleri',
+      'Ekosistem','Madde Döngüleri',
+      'Sinir Sistemi Giriş','Endokrin Sistem Giriş',
+      'Duyu Organları','Destek-Hareket Sistemi',
+      'Sindirim Sistemi','Dolaşım Sistemi',
+      'Solunum Sistemi','Boşaltım Sistemi'
+    ],
+    'Tarih (TYT)': [
+      'Tarih Bilimi','İlk Uygarlıklar',
+      'İlk Türk Devletleri','İslamiyet Öncesi Türk Kültürü',
+      'İlk Müslüman Türk Devletleri',
+      'Türkiye Selçuklu Devleti',
+      'Osmanlı Kuruluş ve Yükseliş',
+      'Osmanlı Gerileme ve Dağılma',
+      'I. Dünya Savaşı ve Mondros',
+      'Milli Mücadele','Lozan','Cumhuriyet İnkılapları',
+      'Atatürk İlkeleri','Çağdaş Türk ve Dünya Tarihi'
+    ],
+    'Coğrafya (TYT)': [
+      'Harita Bilgisi','Dünya\'nın Yapısı ve Hareketleri',
+      'Atmosfer','Hava ve İklim',
+      'İklim Tipleri','Türkiye\'nin Fiziki Coğrafyası',
+      'Türkiye\'nin Beşeri Coğrafyası',
+      'Türkiye\'de Nüfus','Türkiye\'de Tarım',
+      'Türkiye\'de Sanayi ve Ticaret',
+      'Bölgesel Coğrafya: Dünya'
+    ],
+    'Felsefe (TYT)': [
+      'Felsefe Nedir','Bilgi Felsefesi',
+      'Varlık Felsefesi','Ahlak Felsefesi',
+      'Siyaset Felsefesi','Sanat Felsefesi'
+    ],
+    'Din Kültürü (TYT)': [
+      'İslam\'da İnanç Esasları',
+      'Kuran ve Tefsir','Hz. Muhammed\'in Hayatı',
+      'İbadetler','Ahlak ve Değerler',
+      'Diğer Dinler'
+    ]
   },
   'AYT Sayısal': {
-    'Matematik':['Polinomlar','İkinci Derece Denklem','Karmaşık Sayılar','Trigonometri','Logaritma','Diziler','Limit','Türev','İntegral','Permütasyon','Kombinasyon','Olasılık','İstatistik','Analitik Geometri','Vektörler'],
-    'Geometri':['Katı Cisimler','Analitik Geometri','Çember ve Doğru','Trigonometrik Fonksiyonlar'],
-    'Fizik':['Kuvvet-Hareket','Newton Yasaları','Enerji-Momentum','Basit Harmonik Hareket','Dalgalar','Optik','Elektrostatik','Manyetizma','Modern Fizik'],
-    'Kimya':['Atom Modelleri','Kimyasal Hesaplamalar','Gazlar','Çözeltiler','Kimyasal Denge','Elektrokimya','Organik Kimya'],
-    'Biyoloji':['Hücre Bölünmesi','Kalıtım','DNA-RNA','Biyoteknoloji','Sinir Sistemi','Ekosistem','Evrim']
+    'Matematik (AYT)': [
+      'Polinomlar','Polinom Bölme-Çarpanlara Ayırma',
+      'İkinci Dereceden Denklem','Parabol',
+      'Karmaşık Sayılar','Üslü Fonksiyonlar',
+      'Logaritmik Fonksiyonlar','Logaritma Denklemleri',
+      'Trigonometri: Tanım ve Özellikler',
+      'Trigonometrik Denklemler',
+      'Ters Trigonometrik Fonksiyonlar',
+      'Aritmetik Dizi ve Seriler',
+      'Geometrik Dizi ve Seriler',
+      'Permütasyon','Kombinasyon','Binom Teoremi',
+      'Olasılık: Temel Kurallar','Koşullu Olasılık',
+      'İstatistik: Merkezi Eğilim','İstatistik: Dağılım Ölçüleri',
+      'Limit','Süreklilik',
+      'Türev: Tanım ve Temel Kurallar',
+      'Türev: Çarpım-Bölüm-Bileşke',
+      'Türevin Geometrik Yorumu',
+      'Türevin Uygulamaları: Ekstremum',
+      'Türevin Uygulamaları: Asimptot',
+      'Belirsiz İntegral','Belirli İntegral',
+      'Alan Hesabı','Hacim Hesabı',
+      'Analitik Geometri: Doğru',
+      'Analitik Geometri: Çember',
+      'Analitik Geometri: Elips-Hiperbol-Parabol',
+      'Uzayda Analitik Geometri','Vektörler'
+    ],
+    'Geometri (AYT)': [
+      'Üçgen: Bağıntılar','Trigonometrik Alan',
+      'Açıortay-Kenarortay-Yükseklik Bağıntıları',
+      'Stewart Teoremi','Menelaus-Ceva',
+      'Çember: İki Çember İlişkisi',
+      'Çemberde Teğet ve Kiriş',
+      'Analitik Geometride Çember',
+      'Dönüşüm Geometrisi','Katı Cisimler: İleri',
+      'Küre-Silindir-Koni (İleri)'
+    ],
+    'Fizik (AYT)': [
+      'Vektörel Büyüklükler (İleri)',
+      'Newton Yasaları (İleri)','Atwood Makinesi',
+      'İtme ve Momentum','Çarpışmalar',
+      'Dönme Hareketi: Tork','Dönme Hareketi: Açısal Momentum',
+      'Basit Harmonik Hareket',
+      'Yerçekimi: Kepler Yasaları',
+      'Dalga: Boyuna-Enine',
+      'Ses Dalgaları: Doppler Etkisi',
+      'Elektrostatik: Coulomb',
+      'Gauss Yasası','Kondansatörler',
+      'Akım: Ohm Yasası ve Direnç',
+      'Kirchhoff Yasaları','Devre Analizi',
+      'Manyetik Alan: Biot-Savart',
+      'Manyetik Alan: Ampere',
+      'Elektromanyetik İndüksiyon: Faraday',
+      'Lenz Yasası','Alternatif Akım',
+      'Geometrik Optik: Aynalar',
+      'Geometrik Optik: Mercekler',
+      'Dalga Optiği: Girişim-Kırınım',
+      'Fotoelektrik Etki','Compton Saçılması',
+      'Atom Modelleri: Bohr','Radyoaktivite',
+      'Çekirdek Reaksiyonları'
+    ],
+    'Kimya (AYT)': [
+      'Atom Yapısı (İleri)','Periyodik Özellikler (İleri)',
+      'Kimyasal Bağlar (İleri)','Lewis Yapısı',
+      'Mol ve Stokiyometri','Gazlar: İdeal Gaz Yasası',
+      'Gazlar: Gerçek Gazlar','Sıvılar ve Çözeltiler',
+      'Kimyasal Kinetik: Hız Denklemleri',
+      'Kimyasal Denge: Kc ve Kp',
+      'Le Chatelier İlkesi',
+      'Asit-Baz Dengesi: Ka ve Kb',
+      'Buffer Çözeltileri','Çözünürlük Dengesi: Ksp',
+      'Elektrokimya: Standart Potansiyel',
+      'Nernst Denklemi','Elektroliz Hesapları',
+      'Organik: IUPAC Adlandırma',
+      'Alkanlar-Alkenler-Alkinler',
+      'Aromatik Bileşikler','Alkoller',
+      'Aldehitler-Ketonlar','Karboksilik Asitler',
+      'Esterler','Aminler-Amitler',
+      'Karbohidratlar','Proteinler','Lipidler','Polimer'
+    ],
+    'Biyoloji (AYT)': [
+      'Hücre Biyokimyası: Enzimler',
+      'Hücre Biyokimyası: ATP',
+      'Fotosentez: Aydınlık Tepkimeler',
+      'Fotosentez: Karanlık Tepkimeler (Calvin)',
+      'Hücresel Solunum: Glikoliz',
+      'Krebs Döngüsü','Oksidatif Fosforilasyon',
+      'Mitoz: Fazlar ve Kontrol',
+      'Mayoz: Profaz I-II Ayrımı',
+      'Mendelci Genetik (İleri)',
+      'Kan Grubu ve Rh Faktörü',
+      'Cinsiyetle Bağlantılı Kalıtım',
+      'Sitoplazma Kalıtımı','DNA: Yapı ve Replikasyon',
+      'Transkripsiyon','Translasyon',
+      'Gen Düzenlenmesi','Mutasyon ve Çeşitleri',
+      'Biyoteknoloji: Rekombinant DNA',
+      'Biyoteknoloji: PCR ve Elektroforez',
+      'GMO ve Etik','Sinir Sistemi (İleri)',
+      'Endokrin Sistem (İleri)',
+      'Destek-Hareket (İleri)','Bağışıklık Sistemi',
+      'Üreme Sistemi (İleri)',
+      'Bitki Anatomisi','Bitki Fizyolojisi',
+      'Ekoloji: Popülasyon Ekolojisi',
+      'Ekoloji: Toplum Ekolojisi',
+      'Biyoçeşitlilik ve Evrim'
+    ]
   },
   'AYT Eşit Ağırlık': {
-    'Türk Dili ve Edebiyatı':['Şiir Bilgisi','Halk Edebiyatı','Divan Edebiyatı','Tanzimat','Servet-i Fünun','Milli Edebiyat','Cumhuriyet Dönemi','Roman Çözümleme'],
-    'Tarih':['Osmanlı Tarihi','Kurtuluş Savaşı','Cumhuriyet Tarihi','Atatürk İlkeleri'],
-    'Coğrafya':['Türkiye Coğrafyası','Beşeri Coğrafya','Küresel Çevre'],
-    'Matematik':['Polinomlar','Trigonometri','Logaritma','Diziler','Türev Giriş']
+    'Türk Dili ve Edebiyatı (AYT)': [
+      'İslamiyet Öncesi Türk Edebiyatı (Özet)',
+      'Divan Edebiyatı (Özet)',
+      'Halk Edebiyatı (Özet)',
+      'Tanzimat Edebiyatı (Özet)',
+      'Servet-i Fünun (Özet)',
+      'Milli Edebiyat (Özet)',
+      'Cumhuriyet Dönemi (İleri)',
+      'Şiir Tahlil Yöntemi',
+      'Roman-Hikaye Tahlili','Tiyatro Eserleri',
+      'Deneme-Makale','Anı-Gezi Yazısı',
+      'Edebi Akımlar','Dönem-Yazar-Eser Eşleştirme'
+    ],
+    'Tarih (AYT)': [
+      'Osmanlı Tarihi Özet (1299-1600)',
+      'Osmanlı Tarihi Özet (1600-1800)',
+      'Osmanlı Dağılma (1800-1918)',
+      'Tanzimat ve Islahatlar',
+      'I. ve II. Meşrutiyet',
+      'Balkan Savaşları','I. Dünya Savaşı (Detaylı)',
+      'Mondros Sonrası','Kurtuluş Savaşı (Detaylı)',
+      'Lozan Antlaşması','Cumhuriyet İnkılapları (Detaylı)',
+      'Atatürk İlkeleri (Detaylı)',
+      'Çok Partili Dönem',
+      'Soğuk Savaş ve Türkiye',
+      'Günümüz Dünyası'
+    ],
+    'Coğrafya (AYT)': [
+      'Türkiye Doğal Ortam (İleri)',
+      'Türkiye Nüfus Değişimi',
+      'Türkiye Tarım (İleri)',
+      'Türkiye Sanayi (İleri)',
+      'Türkiye Turizm',
+      'Bölgesel Coğrafya: Avrupa',
+      'Bölgesel Coğrafya: Asya',
+      'Bölgesel Coğrafya: Amerika-Afrika',
+      'Küresel Çevre Sorunları (İleri)',
+      'Doğal Afetler ve Risk Yönetimi'
+    ],
+    'Matematik (EA)': [
+      'İkinci Dereceden Denklem (Özet)',
+      'Fonksiyonlar (Özet)',
+      'Trigonometri (Özet)',
+      'Logaritma (Özet)',
+      'Diziler (Özet)',
+      'Olasılık (Özet)',
+      'İstatistik (Özet)',
+      'Türev Giriş','İntegral Giriş'
+    ]
   },
   'AYT Sözel': {
-    'Türk Dili ve Edebiyatı':['Şiir Tahlili','Roman-Hikaye','Tiyatro','Edebi Akımlar','Yazarlar-Eserleri','Dil Bilgisi İleri'],
-    'Tarih':['Osmanlı Kuruluş-Yükseliş','Osmanlı Gerileme-Çöküş','Kurtuluş Savaşı','Cumhuriyet Tarihi','Dünya Tarihi'],
-    'Coğrafya':['Doğal Sistemler','Beşeri Sistemler','Türkiye Coğrafyası','Bölgesel Coğrafya'],
-    'Felsefe':['Felsefeye Giriş','Bilgi Felsefesi','Varlık Felsefesi','Ahlak Felsefesi','Siyaset Felsefesi','Din Felsefesi']
-  },
-  '9. Sınıf':{'Matematik':['Kümeler','Denklemler','Eşitsizlikler','Üçgenler','Dörtgenler','İstatistik'],'Türkçe':['Sözcükte Anlam','Cümlede Anlam','Metin Türleri','Yazım'],'Fizik':['Madde ve Özellikleri','Hareket','Kuvvet'],'Kimya':['Atom','Periyodik Sistem','Kimyasal Bağlar'],'Biyoloji':['Hücre','Canlıların Sınıflandırılması'],'Tarih':['Tarih Bilimi','İlk Uygarlıklar'],'Coğrafya':['Harita','İklim'],'İngilizce':['Greetings','Daily Routines','Travel']},
-  '10. Sınıf':{'Matematik':['İkinci Dereceden Denklem','Fonksiyonlar','Üslü-Köklü','Trigonometri Giriş','Analitik Geometri Giriş','İstatistik'],'Türkçe':['Paragraf','Söz Sanatları','Dil Bilgisi','Edebiyat Türleri'],'Fizik':['Newton Yasaları','Enerji','Dalgalar'],'Kimya':['Kimyasal Tepkimeler','Asitler-Bazlar','Organik Giriş'],'Biyoloji':['Hücre Bölünmesi','Kalıtım Giriş','Ekosistem'],'Tarih':['Osmanlı Kuruluş','Osmanlı Yükseliş','Coğrafi Keşifler'],'Coğrafya':['Fiziki Coğrafya','Nüfus','Tarım'],'İngilizce':['Tenses Review','Reading','Essay Writing']},
-  '11. Sınıf':{'Matematik':['Türev','İntegral Giriş','Logaritma','Diziler','Kombinasyon'],'Türkçe':['İleri Paragraf','Edebiyat Akımları','Divan Edebiyatı'],'Fizik':['Elektrostatik','Manyetizma','Optik','Modern Fizik'],'Kimya':['Gazlar','Çözeltiler','Kimyasal Denge','Elektrokimya'],'Biyoloji':['DNA ve Genetik','Biyoteknoloji','Sinir Sistemi'],'Tarih':['Osmanlı Gerileme','Sanayi Devrimi','I. Dünya Savaşı'],'Coğrafya':['Ekonomik Faaliyetler','Sanayi','Ulaşım'],'İngilizce':['Advanced Grammar','Critical Reading','Academic Writing']},
-  '12. Sınıf':{'Matematik':['İntegral','Analitik Geometri','Vektörler','Olasılık-İstatistik','TYT Tarama'],'Türkçe':['Cumhuriyet Edebiyatı','Roman Tahlili','Paragraf Pekiştirme','TYT Tarama'],'Fizik':['Tüm Konular Tarama','Soru Çözüm Teknikleri'],'Kimya':['Organik Kimya','Tüm Konular Tarama'],'Biyoloji':['Evrim','Ekosistem','Tüm Konular Tarama'],'Tarih':['Kurtuluş Savaşı','Cumhuriyet Tarihi','Atatürk İlkeleri'],'Coğrafya':['Bölgesel Coğrafya','Tüm Konular Tarama'],'İngilizce':['YDS Hazırlık','Okuma Parçaları','Çeviri']}
+    'Türk Dili ve Edebiyatı (Sözel)': [
+      'Edebi Dönem ve Akımlar (Tüm Dönemler)',
+      'Şiir Analizi (İleri Düzey)',
+      'Roman ve Hikaye Analizi (İleri)',
+      'Tiyatro Tarihi ve Eserleri',
+      'Söz Sanatları (İleri)',
+      'Anlam Bilgisi (İleri)',
+      'Öğretici Metin Türleri',
+      'Yazarlar Biyografileri',
+      'Eser-Yazar-Dönem Eşleştirme (Tüm)'
+    ],
+    'Tarih (Sözel)': [
+      'İlk Çağ Uygarlıkları (Detaylı)',
+      'Orta Çağ Tarihi','Yeni Çağ Tarihi',
+      'Osmanlı Tarihi (Tüm Dönemler)',
+      'Kurtuluş Savaşı (İleri)',
+      'Cumhuriyet Tarihi (İleri)',
+      'Atatürk İlkeleri (İleri)',
+      'Dünya Savaşları (Detaylı)',
+      'Soğuk Savaş Dönemi',
+      'Günümüz Uluslararası İlişkileri'
+    ],
+    'Coğrafya (Sözel)': [
+      'Kozmografya','Litosfer',
+      'Hidrosfer','Atmosfer (İleri)',
+      'Pedosfer','Biyosfer',
+      'Beşeri Coğrafya (İleri)',
+      'Türkiye Coğrafyası (Tüm)',
+      'Bölgesel Coğrafya (Tüm Kıtalar)',
+      'Çevre Coğrafyası'
+    ],
+    'Felsefe (Sözel)': [
+      'Felsefi Düşüncenin Özellikleri',
+      'Antik Yunan Felsefesi',
+      'Orta Çağ Felsefesi','Rönesans Felsefesi',
+      'Modern Felsefe: Descartes-Locke-Hume',
+      'Aydınlanma Felsefesi: Kant',
+      'XIX. Yüzyıl Felsefesi',
+      'XX. Yüzyıl Felsefesi',
+      'Bilim Felsefesi','Mantık (İleri)',
+      'Ahlak Felsefesi (İleri)',
+      'Siyaset Felsefesi (İleri)',
+      'Din Felsefesi','Estetik'
+    ]
+  }
 };
 const GRADE_KEYS=['9. Sınıf','10. Sınıf','11. Sınıf','12. Sınıf','TYT','AYT Sayısal','AYT Eşit Ağırlık','AYT Sözel'];
 function getGradeKey(grade){
   if(!grade) return 'TYT';
-  const g=grade.toLowerCase();
+  const g=grade.toLowerCase().trim();
   if(g.includes('9')) return '9. Sınıf';
   if(g.includes('10')) return '10. Sınıf';
   if(g.includes('11')) return '11. Sınıf';
@@ -769,8 +1313,10 @@ function getGradeKey(grade){
   if(g.includes('sayısal')||g.includes('mf')) return 'AYT Sayısal';
   if(g.includes('eşit')||g.includes('tm')) return 'AYT Eşit Ağırlık';
   if(g.includes('sözel')||g.includes('ts')) return 'AYT Sözel';
+  if(g.includes('ayt')) return 'AYT Sayısal';
   return 'TYT';
 }
+
 const SPACED = 2;
 const STATUS_LBLS = ['Anlatılmadı','Tekrar Gerekiyor','Pekişti'];
 
@@ -915,33 +1461,49 @@ function buildRepHTML(c){
 // ═══ SCHEDULE HELPERS ═══
 function buildTopicsPanel(){
   const c=getSchC();
-  const gsel=$('schedGradeSel');
-  if(!gsel) return;
-  if(!gsel.dataset.b){
-    gsel.innerHTML=GRADE_KEYS.map(k=>`<option value="${k}">${k}</option>`).join('');
-    if(c) gsel.value=getGradeKey(c.grade);
-    gsel.addEventListener('change',buildTopicsPanel);
-    gsel.dataset.b='1';
+  if(!c){
+    const lbl=$('schedGradeLabel');
+    if(lbl) lbl.textContent='Danışan seçin';
+    const list=$('schedTopicsList');
+    if(list) list.innerHTML='<div style="font-size:12px;color:var(--ink-soft);padding:8px 0;">Danışan seçilince kazanımlar görünür.</div>';
+    return;
   }
-  const gradeKey=gsel.value||(c?getGradeKey(c.grade):'TYT');
+  const gradeKey=getGradeKey(c.grade);
+  const lbl=$('schedGradeLabel');
+  if(lbl) lbl.textContent=c.name+' · '+c.grade+' · '+gradeKey;
   const topics=GRADE_CURRICULUM[gradeKey]||{};
   const list=$('schedTopicsList');
   if(!list) return;
-  const SC={'Matematik':'#2F5D5C','Geometri':'#1F4140','Türkçe':'#C9764A',
-    'Türk Dili ve Edebiyatı':'#B5434A','Fizik':'#4A5FC9','Kimya':'#7C5CBF',
-    'Biyoloji':'#5C8A5C','Tarih':'#D4700A','Coğrafya':'#2E7D32',
-    'Felsefe':'#6D4C41','İngilizce':'#0277BD','Din Kültürü':'#558B2F'};
+  const SC={
+    'Türkçe':'#C9764A','Türk Dili ve Edebiyatı':'#B5434A',
+    'Türk Dili ve Edebiyatı (AYT)':'#B5434A','Türk Dili ve Edebiyatı (Sözel)':'#B5434A',
+    'Matematik':'#2F5D5C','Matematik (TYT)':'#2F5D5C',
+    'Matematik (AYT)':'#1F4140','Matematik (EA)':'#2F5D5C',
+    'Geometri (TYT)':'#3D7A6E','Geometri (AYT)':'#1F4140',
+    'Fizik':'#4A5FC9','Fizik (TYT)':'#4A5FC9','Fizik (AYT)':'#3A4FB9',
+    'Kimya':'#7C5CBF','Kimya (TYT)':'#7C5CBF','Kimya (AYT)':'#6A4AAF',
+    'Biyoloji':'#5C8A5C','Biyoloji (TYT)':'#5C8A5C','Biyoloji (AYT)':'#4A7A4A',
+    'Tarih':'#D4700A','Tarih (TYT)':'#D4700A','Tarih (AYT)':'#C4600A','Tarih (Sözel)':'#B45000',
+    'T.C. İnkılap Tarihi ve Atatürkçülük':'#D4700A',
+    'Türkiye Cumhuriyeti İnkılap Tarihi':'#D4700A',
+    'Coğrafya':'#2E7D32','Coğrafya (TYT)':'#2E7D32',
+    'Coğrafya (AYT)':'#1B6020','Coğrafya (Sözel)':'#1B6020',
+    'Felsefe':'#6D4C41','Felsefe (TYT)':'#6D4C41','Felsefe (Sözel)':'#5D3C31',
+    'Din Kültürü ve Ahlak Bilgisi':'#558B2F','Din Kültürü (TYT)':'#558B2F',
+    'İngilizce':'#0277BD'
+  };
   list.innerHTML='';
   Object.entries(topics).forEach(([subject,kazanimlar])=>{
     const color=SC[subject]||'#2F5D5C';
     const hd=document.createElement('div');
     hd.className='sched-subject-hd';
-    hd.innerHTML=`<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:5px;vertical-align:middle;"></span>${subject}</span><span>▾</span>`;
+    hd.innerHTML=`<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:5px;vertical-align:middle;"></span>${subject} <span style="font-size:10px;font-weight:400;color:var(--ink-soft);">(${kazanimlar.length})</span></span><span>▾</span>`;
     const grp=document.createElement('div');
     kazanimlar.forEach(kaz=>{
       const item=document.createElement('div');
       item.className='sched-topic-item';
       item.draggable=true;
+      item.title=`${subject}: ${kaz} — sürükleyip saate bırakın`;
       item.innerHTML=`<span class="sched-color-dot" style="background:${color};"></span>${kaz}`;
       item.addEventListener('dragstart',ev=>{
         item.classList.add('dragging');
@@ -951,6 +1513,8 @@ function buildTopicsPanel(){
       item.addEventListener('dragend',()=>item.classList.remove('dragging'));
       grp.appendChild(item);
     });
+    // Varsayılan kapalı - ders başlığına tıklayınca açılır
+    grp.style.display='none';
     hd.onclick=()=>{
       const col=grp.style.display==='none';
       grp.style.display=col?'':'none';
@@ -1008,13 +1572,10 @@ function drawWG(c,elId,ed){
         const data=JSON.parse(ev.dataTransfer.getData('text/plain'));
         const day=Number(cell.dataset.day);
         const hr=Number(cell.dataset.hour);
-        // Tıklanan y pozisyonundan dakikayı hesapla
-        const rect=cell.getBoundingClientRect();
-        const relY=ev.clientY-rect.top;
-        const fracMin=Math.round((relY/RH)*60/15)*15; // 15dk hassasiyet
-        const startMin=hr*60+Math.min(fracMin,45);
+        // Her hücre tam 1 saat — her zaman hücrenin tam saatine bırak
+        const startMin=hr*60;
         const startT=mToT(startMin);
-        const endT=mToT(startMin+60); // varsayılan 1 saat
+        const endT=mToT(startMin+60); // 1 saat
         // Mevcut blok var mı kontrol (çakışma)
         const exists=c.schedule.some(b=>b.day===day&&tMin(b.start)<startMin+60&&tMin(b.end)>startMin);
         if(exists){
