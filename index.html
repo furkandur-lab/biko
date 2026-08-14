@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BİKOÇ · Eğitim Koçluğu Platformu</title>
+<title>BİKOÇ v4.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -813,6 +813,8 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
     <div class="fi"><label>Ders Sonuçları — D/Y/B + Hatalı Konular</label><div id="exSubjs"></div>
 <script>
 
+document.addEventLis
+
 document.addEventListener('DOMContentLoaded', function() {
 
 'use strict';
@@ -1495,10 +1497,11 @@ function bf(c){
   c.fee=c.fee||0; c.school=c.school||''; c.grade=c.grade||'';
   c.pin=c.pin||''; c.parentPin=c.parentPin||'';
   c.videos.forEach(v=>{v.type=v.type||'yt'; if(!v.embedSrc&&v.ytId) v.embedSrc=`https://www.youtube-nocookie.com/embed/${v.ytId}?enablejsapi=1&rel=0`;});
-  // Eğer schedule boşsa SEED'den al (migration için)
-  if(!c.schedule||!c.schedule.length){
-    const seed=SEED.clients.find(x=>x.id===c.id);
-    if(seed&&seed.schedule&&seed.schedule.length) c.schedule=[...seed.schedule];
+  // Migration: schedule/curriculum boşsa SEED'den kopyala
+  const _seed=SEED.clients.find(x=>x.id===c.id);
+  if(_seed){
+    if(!c.schedule||!c.schedule.length) c.schedule=JSON.parse(JSON.stringify(_seed.schedule||[]));
+    if(!c.curriculum||!Object.keys(c.curriculum).length) c.curriculum=JSON.parse(JSON.stringify(_seed.curriculum||{}));
   }
   c.exams.forEach(ex=>ex.subjects.forEach(s=>{s.weakTopics=s.weakTopics||[];}));
   c.assignments.forEach(a=>{a.autoAdded=a.autoAdded||false;});
@@ -1676,7 +1679,7 @@ function drawWG(c,elId,ed){
           <div class="sbls">${b.start}-${b.end}</div>
         </div>`;
       });
-      h+=`<div class="wgc wg-cell-drop" data-day="${day}" data-hour="${hr}" style="height:${RH}px;">${cc}</div>`;
+      h+=`<div class="wgc${ed?' wg-cell-drop':''}" data-day="${day}" data-hour="${hr}" style="height:${RH}px;">${cc}</div>`;
     }
   });
   h+=`</div></div>`;
@@ -3739,6 +3742,7 @@ function rParSched(){
   // Velinin activeClient'ını state.clients'tan fresh al (localStorage sync)
   const raw=getAC();
   const c=raw?state.clients.find(x=>x.id===raw.id)||raw:null;
+  // console.log('[rParSched] client:', c&&c.name, 'schedule:', c&&c.schedule&&c.schedule.length);
   const view=$('parSchedView');
   if(!c){if(view)view.innerHTML='<div class="empty">Öğrenci bulunamadı.</div>';return;}
   const tabs=$('parSchedTabs');
@@ -3762,11 +3766,13 @@ function rParSched(){
 function drawParSch(c){
   const leg=$('parSchedLeg');
   const view=$('parSchedView');
+  // console.log('[drawParSch] leg:', !!leg, 'view:', !!view, 'parSchedView:', parSchedView, 'schedule len:', c&&c.schedule&&c.schedule.length);
   if(!leg||!view) return;
   drawLeg(c,'parSchedLeg');
   if(parSchedView==='weekly') drawWG(c,'parSchedView',false);
   else if(parSchedView==='daily') drawDL(c,'parSchedView',false);
   else drawHL(c,'parSchedView',false);
+  // console.log('[drawParSch] view innerHTML len:', view&&view.innerHTML&&view.innerHTML.length);
 }
 
 // ═══ SIDEBAR & NAVIGATION ═══
@@ -3906,7 +3912,7 @@ function bindAll(){
     const name=$('cName').value.trim(); if(!name){alert('Ad girin.');return;}
     const c={id:Date.now(),name,email:$('cEmail').value.trim(),phone:$('cPhone').value.trim(),school:$('cSchool').value.trim(),grade:$('cGrade').value,goal:$('cGoal').value.trim(),fee:Number($('cFee').value)||0,pin:$('cPin').value.trim(),parentPin:$('cParentPin').value.trim(),notes:[],assignments:[],exams:[],curriculum:{},studyLog:[],resources:[],ledger:[],videos:[],videoLogs:[],schedule:[],moodLog:[],pomLog:[],messages:[],books:[...cBookList],examResults:[],aiTests:[]};
     state.clients.push(c); selC.client=c.id; closeM('mClient'); rerender();
-  };
+  };;
   // APPOINTMENTS
   $('addApptBtn').onclick=()=>{$('apptClient').innerHTML=state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');$('apptDate').value=TODAY;$('apptTime').value='10:00';$('apptType').value='Birebir koçluk seansı';openM('mAppt');};
   $('saveApptBtn').onclick=()=>{const d=$('apptDate').value;const t=$('apptTime').value;if(!d||!t){alert('Tarih ve saat girin.');return;}state.appts.push({id:Date.now(),clientId:Number($('apptClient').value),date:d,time:t,type:$('apptType').value.trim()||'Koçluk seansı'});closeM('mAppt');rerender();};
@@ -3988,13 +3994,21 @@ function bindAll(){
     };
     $('chatInput').addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();$('chatSendBtn').click();}});
   }
-  // Kaynak kitap input
-  if($('cBookInput')) initBookInput();
+  // Kaynak kitap - initBookInput modal açılınca çağrılıyor
   $('addClientBtn').onclick=()=>{
-    ['cName','cEmail','cPhone','cSchool','cGoal','cPin','cParentPin'].forEach(id=>$(id).value='');
-    $('cGrade').value='';$('cFee').value='';
-    initBookInput();
-    openM('mClient');
+    // Formu temizle
+    ['cName','cEmail','cPhone','cSchool','cGoal','cPin','cParentPin'].forEach(id=>{
+      const el=$(id); if(el) el.value='';
+    });
+    const gr=$('cGrade'); if(gr) gr.value='';
+    const fee=$('cFee'); if(fee) fee.value='';
+    // Modal aç
+    const modal=$('mClient');
+    if(modal) modal.classList.remove('hidden');
+    // Kitap listesini sıfırla
+    cBookList=[];
+    const tags=$('cBookTags'); if(tags) tags.innerHTML='';
+    setTimeout(initBookInput, 50);
   };
 } // end bindAll
 
@@ -4010,6 +4024,4 @@ updPom(pomSec);
 bindAll();
 
 }); // end DOMContentLoaded
-</script>
-</body>
-</html>
+ml>
