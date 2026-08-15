@@ -809,8 +809,84 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
 <div class="modal-bg hidden" id="mAppt">
   <div class="modal"><h2>Randevu</h2>
     <div class="fi"><label>Danışan</label><select id="apptClient"></select></div>
-    <div class="fr"><div class="fi"><label>Tarih</label><input type="date" id="apptDate"></div><div class="fi"><label>Saat</label>
+    <div class="fr"><div class="fi"><label>Tarih</label><input type="date" id="apptDate"></div><div class="fi"><label>Saat</label><input type="time" id="apptTime"></div></div>
+    <div class="fi"><label>Tür</label><input id="apptType" placeholder="Birebir koçluk seansı"></div>
+    <div class="mac"><button class="bg" data-close="mAppt">Vazgeç</button><button class="bp" id="saveApptBtn">Kaydet</button></div>
+  </div>
+</div>
+
+<div class="modal-bg hidden" id="mNote">
+  <div class="modal"><h2>Seans Notu</h2>
+    <div class="fr"><div class="fi"><label>Tarih</label><input type="date" id="noteDate"></div><div class="fi"><label>Başlık</label><input id="noteTitle" placeholder="Seans Notu"></div></div>
+    <div class="fi"><label>Not</label><textarea id="noteText" rows="4" placeholder="Seans notunu girin..."></textarea></div>
+    <div class="mac"><button class="bg" data-close="mNote">Vazgeç</button><button class="bp" id="saveNoteBtn">Kaydet</button></div>
+  </div>
+</div>
+
+<div class="modal-bg hidden" id="mAssign">
+  <div class="modal"><h2>Ödev Ekle</h2>
+    <div class="fi"><label>Başlık</label><input id="asTitle" placeholder="Türev 30 soru..."></div>
+    <div class="fr"><div class="fi"><label>Ders</label><input id="asSubj" placeholder="Matematik"></div><div class="fi"><label>Son Tarih</label><input type="date" id="asDue"></div></div>
+    <div class="fi"><label>Not</label><input id="asNote" placeholder="Ek açıklama..."></div>
+    <div class="mac"><button class="bg" data-close="mAssign">Vazgeç</button><button class="bp" id="saveAssBtn">Kaydet</button></div>
+  </div>
+</div>
+
+<div class="modal-bg hidden" id="mVideo">
+  <div class="modal"><h2>Video Görevi Ekle</h2>
+    <div class="fi"><label>Başlık</label><input id="vTitle" placeholder="Türev Anlatımı..."></div>
+    <div style="display:flex;gap:0;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:12px;">
+      <div id="tabLocal" style="flex:1;padding:8px;text-align:center;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--teal);color:#fff;">💾 Yerel Dosya</div>
+      <div id="tabYt" style="flex:1;padding:8px;text-align:center;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--cream);color:var(--ink-soft);">▶ YouTube</div>
+    </div>
+    <div id="panelLocal"><div class="fi"><label>Video Dosyası</label><input type="file" id="vFile" accept="video/*"></div></div>
+    <div id="panelYt" style="display:none;"><div class="fi"><label>YouTube URL / ID</label><input id="vUrl" placeholder="https://youtube.com/watch?v=..."></div></div>
+    <div class="fi"><label>Açıklama</label><input id="vDesc" placeholder="Opsiyonel not..."></div>
+    <div class="mac"><button class="bg" data-close="mVideo">Vazgeç</button><button class="bp" id="saveVBtn">Kaydet</button></div>
+  </div>
+</div>
+
+<div class="modal-bg hidden" id="mExam">
+  <div class="modal" style="max-width:640px;"><h2 id="examMTitle">Deneme Ekle</h2>
+    <input type="hidden" id="examEId">
+    <div class="fr"><div class="fi"><label>Deneme Adı</label><input id="exName" placeholder="TYT Deneme 1"></div><div class="fi"><label>Tarih</label><input type="date" id="exDate"></div></div>
+    <div class="fi"><label>Dersler (Ders / D / Y / B / Hatalı Konular)</label>
+      <div id="exSubjs"></div>
+      <button class="bg" id="exAddRow" style="margin-top:7px;width:100%;">+ Ders Ekle</button>
+    </div>
+    <div class="mac"><button class="bg" data-close="mExam">Vazgeç</button><button class="bp" id="saveExBtn">Kaydet</button></div>
+  </div>
+</div>
+
+<div class="modal-bg hidden" id="mSched">
+  <div class="modal"><h2 id="schedMTitle">Blok Ekle</h2>
+    <input type="hidden" id="schedEId">
+    <div class="fr"><div class="fi"><label>Ders</label><input id="sbSubj" placeholder="Matematik..."></div>
+      <div class="fi"><label>Gün</label><select id="sbDay"><option value="0">Pazartesi</option><option value="1">Salı</option><option value="2">Çarşamba</option><option value="3">Perşembe</option><option value="4">Cuma</option><option value="5">Cumartesi</option><option value="6">Pazar</option></select></div>
+    </div>
+    <div class="fr"><div class="fi"><label>Başlangıç</label><input type="time" id="sbStart"></div><div class="fi"><label>Bitiş</label><input type="time" id="sbEnd"></div></div>
+    <div class="fi"><label>Not</label><input id="sbNote" placeholder="Opsiyonel..."></div>
+    <div id="colorPicker" style="display:flex;flex-wrap:wrap;gap:7px;margin:10px 0;">
+      <div class="csw sel" data-c="#2F5D5C" style="width:26px;height:26px;border-radius:6px;background:#2F5D5C;cursor:pointer;"></div>
+      <div class="csw" data-c="#C9764A" style="width:26px;height:26px;border-radius:6px;background:#C9764A;cursor:pointer;"></div>
+      <div class="csw" data-c="#4A5FC9" style="width:26px;height:26px;border-radius:6px;background:#4A5FC9;cursor:pointer;"></div>
+      <div class="csw" data-c="#7C5CBF" style="width:26px;height:26px;border-radius:6px;background:#7C5CBF;cursor:pointer;"></div>
+      <div class="csw" data-c="#5C8A5C" style="width:26px;height:26px;border-radius:6px;background:#5C8A5C;cursor:pointer;"></div>
+      <div class="csw" data-c="#D4700A" style="width:26px;height:26px;border-radius:6px;background:#D4700A;cursor:pointer;"></div>
+      <div class="csw" data-c="#B5434A" style="width:26px;height:26px;border-radius:6px;background:#B5434A;cursor:pointer;"></div>
+      <div class="csw" data-c="#0277BD" style="width:26px;height:26px;border-radius:6px;background:#0277BD;cursor:pointer;"></div>
+    </div>
+    <div class="mac">
+      <button class="bd hidden" id="schedDelBtn">Sil</button>
+      <button class="bg" data-close="mSched">Vazgeç</button>
+      <button class="bp" id="saveSchedBtn">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+
 <script>
+
 document.addEventListener('DOMContentLoaded', function() {
 
 'use strict';
@@ -2975,18 +3051,7 @@ function rExamMgmtDetail(){
 
 
 
-  $('emParseBtn').onclick=()=>{
-    try{
-      const raw=$('emManualJSON').value.trim();
-      const parsed=JSON.parse(raw);
-      if(!Array.isArray(parsed)||!parsed[0]?.question) throw new Error('Geçersiz format');
-      manualQuestions=parsed;
-      $('emParseStatus').innerHTML=`<div class="spbox" style="color:var(--good);">✓ ${parsed.length} soru başarıyla okundu.</div>`;
-    }catch(err){
-      $('emParseStatus').innerHTML=`<div style="color:var(--rose);font-size:12.5px;">✗ Hata: ${err.message}</div>`;
-      manualQuestions=[];
-    }
-  };
+  // emParseBtn removed (PDF tab handles this)
 }
 
 let emActiveTab='ai';
@@ -3765,6 +3830,7 @@ function rMessages(){
   }
 }
 
+function openChat(){openCoachChat();}
 function openCoachChat(){
   if(!chatSelContact) return;
   const av=$('chatAv'); const nm=$('chatName'); const rl=$('chatRole');
