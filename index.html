@@ -191,12 +191,12 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
 .stab.active{background:var(--teal);color:#fff;border-color:var(--teal);}
 .wg{display:grid;grid-template-columns:46px repeat(7,1fr);gap:0;border:1px solid var(--line);border-radius:11px;overflow:hidden;font-size:11px;}
 .wgh{background:var(--teal-deep);color:#fff;padding:7px 3px;text-align:center;font-weight:600;font-size:10.5px;}
-.wgc{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:40px;position:relative;cursor:pointer;background:var(--paper);}
+.wgc{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:70px;position:relative;cursor:pointer;background:var(--paper);}
 .wgc:hover{background:#F5F0E8;}
 .wgc.tl{background:var(--cream);cursor:default;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:600;border-right:2px solid var(--line);}
-.sbl{position:absolute;inset:2px;border-radius:5px;padding:3px 4px;font-size:10px;font-weight:700;color:#fff;overflow:hidden;cursor:pointer;z-index:2;}
-.sblt{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sbls{font-size:9px;opacity:.85;font-family:'JetBrains Mono',monospace;}
+.sbl{position:absolute;inset:2px;border-radius:6px;padding:5px 6px;font-size:12px;font-weight:700;color:#fff;overflow:hidden;cursor:pointer;z-index:2;}
+.sblt{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sbls{font-size:11px;opacity:.9;font-family:'JetBrains Mono',monospace;}
 .hb{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:9px 12px;display:flex;gap:9px;align-items:center;margin-bottom:5px;}
 .hbbar{width:3px;border-radius:2px;align-self:stretch;flex-shrink:0;min-height:32px;}
 .hbt{font-weight:600;font-size:13px;}
@@ -1748,7 +1748,7 @@ function drawLeg(c,elId){
   const s={};(c.schedule||[]).forEach(b=>{s[b.color]=b.subject;});
   $(elId).innerHTML=Object.entries(s).map(([col,sub])=>`<div class="lgi"><div class="lgd" style="background:${col};"></div>${sub}</div>`).join('');
 }
-const RH=40;
+const RH=70;
 function drawWG(c,elId,ed){
   const bl=c.schedule||[];
   let h=`<div style="overflow-x:auto;"><div class="wg" style="min-width:450px;">
@@ -1767,7 +1767,11 @@ function drawWG(c,elId,ed){
           <div class="sbls">${b.start}-${b.end}</div>
         </div>`;
       });
-      h+=`<div class="wgc${ed?' wg-cell-drop':''}" data-day="${day}" data-hour="${hr}" style="height:${RH}px;">${cc}</div>`;
+      const dropLabels=ed?`<div style="position:absolute;inset:0;display:flex;flex-direction:column;pointer-events:none;opacity:.25;">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--teal-deep);border-bottom:1px dashed var(--line);">SORU ÇÖZME</div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--clay);">KONU ANLATIM</div>
+        </div>`:'';
+      h+=`<div class="wgc${ed?' wg-cell-drop':''}" data-day="${day}" data-hour="${hr}" style="height:${RH}px;">${dropLabels}${cc}</div>`;
     }
   });
   h+=`</div></div>`;
@@ -2719,9 +2723,10 @@ function rAiTest(){
 }
 
 function rParPayments(){
-  const c=getAC();
+  const raw=getAC();
+  const c=raw?state.clients.find(x=>x.id===raw.id)||raw:null;
   const wrap=$('parPayView');
-  if(!c||!wrap) return;
+  if(!c||!wrap){if(wrap)wrap.innerHTML='<div class="empty">Öğrenci bulunamadı.</div>';return;}
 
   const b=bal(c);
   const paid=(c.ledger||[]).filter(x=>x.type==='tahsilat');
@@ -4044,6 +4049,8 @@ function rParMessages(){
   renderChatMsgs(getMsgs(c.id,thread),'parent','parChatMsgs');
   const sendBtn=$('parChatSendBtn');
   if(sendBtn){
+    // Her render'da yeniden bağla (onclick ile önceki handler'ı ezer)
+    sendBtn.onclick=null;
     sendBtn.onclick=function(){
       const inp=$('parChatInput'); if(!inp) return;
       const t=inp.value.trim(); if(!t) return;
@@ -4094,8 +4101,9 @@ function rParSched(){
   const c=raw?state.clients.find(x=>x.id===raw.id)||raw:null;
   const view=$('parSchedView');
   if(!c){if(view)view.innerHTML='<div class="empty">Öğrenci bulunamadı.</div>';return;}
+  // Sekme tıklama - her render'da yeniden bağla
   const tabs=$('parSchedTabs');
-  if(tabs&&!tabs.dataset.b){
+  if(tabs){
     tabs.querySelectorAll('.stab').forEach(function(tab){
       tab.onclick=function(){
         parSchedView=tab.dataset.v;
@@ -4103,25 +4111,22 @@ function rParSched(){
         drawParSch(c);
       };
     });
-    tabs.dataset.b='1';
-  }
-  if(!c.schedule||!c.schedule.length){
-    if(view)view.innerHTML='<div class="empty">Henüz haftalık program oluşturulmamış.<br><span style="font-size:12px;color:var(--ink-soft);">Koç Program sayfasından program ekleyebilir.</span></div>';
-    const leg=$('parSchedLeg');if(leg)leg.innerHTML='';
-    return;
   }
   drawParSch(c);
 }
 function drawParSch(c){
   const leg=$('parSchedLeg');
   const view=$('parSchedView');
-  // console.log('[drawParSch] leg:', !!leg, 'view:', !!view, 'parSchedView:', parSchedView, 'schedule len:', c&&c.schedule&&c.schedule.length);
-  if(!leg||!view) return;
-  drawLeg(c,'parSchedLeg');
+  if(!leg||!view){return;}
+  // Lejand
+  const sched=c.schedule||[];
+  const subjColors={};
+  sched.forEach(b=>{subjColors[b.color]=b.subject;});
+  leg.innerHTML=Object.entries(subjColors).map(([col,sub])=>`<div class="lgi"><div class="lgd" style="background:${col};"></div>${sub}</div>`).join('');
+  // Grid
   if(parSchedView==='weekly') drawWG(c,'parSchedView',false);
   else if(parSchedView==='daily') drawDL(c,'parSchedView',false);
   else drawHL(c,'parSchedView',false);
-  // console.log('[drawParSch] view innerHTML len:', view&&view.innerHTML&&view.innerHTML.length);
 }
 
 // ═══ SIDEBAR & NAVIGATION ═══
