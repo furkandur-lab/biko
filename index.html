@@ -164,7 +164,9 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
 .bb{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;}
 .bb.debt{background:var(--rose-soft);color:var(--rose);}
 .bb.clear{background:#E3EEE3;color:var(--good);}
-.lgrow{display:grid;grid-template-columns:78px 1fr 72px 62px;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px;}
+
+.lgrow{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+.lgrow_old{display:grid;grid-template-columns:78px 1fr 72px 62px;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px;}
 .lgrow:last-child{border-bottom:none;}
 .lgdate{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-soft);}
 .lgamt{font-family:'JetBrains Mono',monospace;font-weight:600;text-align:right;}
@@ -484,7 +486,9 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
       <div class="card" style="margin-bottom:10px;padding:12px 16px;">
         <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;">
           <label style="font-size:13px;font-weight:600;margin:0;">Danışan:</label>
-          <select id="schedClient" style="max-width:220px;flex:1;"></select>
+          <select id="schedClient" style="max-width:180px;flex:1;"></select>
+          <label style="font-size:13px;font-weight:600;margin:0;">Sınıf/Seviye:</label>
+          <select id="schedGradeSel" style="max-width:160px;"></select>
           <div class="stabs" id="schedTabs" style="margin:0;">
             <div class="stab active" data-v="weekly">Haftalık</div>
             <div class="stab" data-v="daily">Günlük</div>
@@ -750,6 +754,12 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
     <div id="page-par-dashboard" class="page">
       <div class="ph"><div><h1 id="parTitle">Veli Paneli</h1><p>Salt okunur rapor görünümü</p></div></div>
       <div class="rpage" id="parRepContent"></div>
+    <div id="page-par-payments" class="page">
+      <div class="ph"><div><h1>💰 Ödemelerim</h1><p>Ödeme planı ve geçmişiniz</p></div></div>
+      <div class="card">
+        <div id="parPayView"><div class="empty">Yükleniyor...</div></div>
+      </div>
+    </div>
     <div id="page-par-schedule" class="page">
       <div class="ph"><div><h1>📅 Haftalık Program</h1><p>Çocuğunuzun haftalık çalışma programı</p></div></div>
       <div class="card" style="overflow-x:auto;">
@@ -827,6 +837,11 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
   <div class="modal"><h2>Ödev Ekle</h2>
     <div class="fi"><label>Başlık</label><input id="asTitle" placeholder="Türev 30 soru..."></div>
     <div class="fr"><div class="fi"><label>Ders</label><input id="asSubj" placeholder="Matematik"></div><div class="fi"><label>Son Tarih</label><input type="date" id="asDue"></div></div>
+    <div class="fi"><label>Kaynak Kitap <span style="font-size:11px;color:var(--ink-soft);">(opsiyonel)</span></label>
+      <select id="asBook" style="width:100%;">
+        <option value="">— Seç —</option>
+      </select>
+    </div>
     <div class="fi"><label>Not</label><input id="asNote" placeholder="Ek açıklama..."></div>
     <div class="mac"><button class="bg" data-close="mAssign">Vazgeç</button><button class="bp" id="saveAssBtn">Kaydet</button></div>
   </div>
@@ -1657,7 +1672,7 @@ function buildRepHTML(c){
     <div class="rsec"><h3>Müfredat</h3>${curH}</div>
     <div class="rsec"><h3>Ödev</h3><p style="font-size:12.5px;">${doneA}/${c.assignments.length} ödev tamamlandı.</p></div>
     <div class="rsec"><h3>Çalışma</h3><p style="font-size:12.5px;"><b>${totalH} saat</b> toplam çalışma süresi.</p></div>
-    <div class="rsec"><h3>Cari</h3><p style="font-size:12.5px;">Aylık: <b>${fTRY(c.fee||0)}</b> · Bakiye: <b>${b>0?fTRY(b)+' (borç)':'Güncel'}</b></p></div>
+
   </div>
   <div class="rfoot"><span>BİKOÇ Eğitim Koçluğu</span><span>${c.name} · ${fd(TODAY)}</span></div>`;
 }
@@ -1776,19 +1791,24 @@ function drawWG(c,elId,ed){
         const data=JSON.parse(ev.dataTransfer.getData('text/plain'));
         const day=Number(cell.dataset.day);
         const hr=Number(cell.dataset.hour);
-        // Her hücre tam 1 saat — her zaman hücrenin tam saatine bırak
+        // Bırakılan Y pozisyonuna göre tür belirle: üst yarı=soru çözme, alt yarı=konu anlatım
+        const rect2=cell.getBoundingClientRect();
+        const relY2=ev.clientY-rect2.top;
+        const isUpperHalf=relY2<(rect2.height/2);
+        const noteType=isUpperHalf?'Soru Çözme':'Konu Anlatım';
+        // Her hücre tam 1 saat
         const startMin=hr*60;
         const startT=mToT(startMin);
-        const endT=mToT(startMin+60); // 1 saat
+        const endT=mToT(startMin+60);
         // Mevcut blok var mı kontrol (çakışma)
         const exists=c.schedule.some(b=>b.day===day&&tMin(b.start)<startMin+60&&tMin(b.end)>startMin);
         if(exists){
           // Çakışıyorsa sona ekle
           const lastEnd=Math.max(...c.schedule.filter(b=>b.day===day).map(b=>tMin(b.end)),hr*60);
           if(lastEnd+60>24*60){alert('Bu güne daha fazla blok eklenemiyor.');return;}
-          c.schedule.push({id:Date.now(),day,start:mToT(lastEnd),end:mToT(lastEnd+60),subject:data.subject,note:data.topic,color:data.color,autoAdded:false});
+          c.schedule.push({id:Date.now(),day,start:mToT(lastEnd),end:mToT(lastEnd+60),subject:data.subject,note:noteType+': '+data.topic,color:data.color,autoAdded:false});
         } else {
-          c.schedule.push({id:Date.now(),day,start:startT,end:endT,subject:data.subject,note:data.topic,color:data.color,autoAdded:false});
+          c.schedule.push({id:Date.now(),day,start:startT,end:endT,subject:data.subject,note:noteType+': '+data.topic,color:data.color,autoAdded:false});
         }
         save();
         drawSchView();
@@ -2213,8 +2233,26 @@ function rSched(){
   sel.innerHTML=state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   if(state.clients.some(c=>String(c.id)===prev)) sel.value=prev;
   else if(state.clients.length) sel.value=state.clients[0].id;
-  if(!sel.dataset.b){sel.addEventListener('change',()=>{drawSchView();buildTopicsPanel();});sel.dataset.b='1';}
-  drawSchView();
+  if(!sel.dataset.b){
+    sel.addEventListener('change',()=>{
+      // Danışan değişince sınıf grade seçiciyi güncelle
+      const c=getSchC();
+      const gsel=$('schedGradeSel');
+      if(c&&gsel){gsel.value=getGradeKey(c.grade);}
+      drawSchView(); buildTopicsPanel();
+    });
+    sel.dataset.b='1';
+  }
+  // İlk yüklemede grade'i ayarla
+  const c0=getSchC();
+  const gsel0=$('schedGradeSel');
+  if(c0&&gsel0&&!gsel0.dataset.b){
+    gsel0.innerHTML=GRADE_KEYS.map(k=>`<option value="${k}">${k}</option>`).join('');
+    gsel0.value=getGradeKey(c0.grade);
+    gsel0.addEventListener('change',buildTopicsPanel);
+    gsel0.dataset.b='1';
+  }
+  drawSchView(); buildTopicsPanel();
 }
 function drawSchView(){
   const c=getSchC();
@@ -2515,7 +2553,16 @@ function rAccDetail(){
   const wrap=$('accDetail'); const c=state.clients.find(x=>x.id===selC.acc);
   if(!c){wrap.innerHTML='<div class="empty">Danışan seçin</div>';return;}
   const b=bal(c);
-  const rows=[...c.ledger].sort((a,el)=>el.date.localeCompare(a.date)).map(l=>`<div class="lgrow"><div class="lgdate">${fds(l.date)}</div><div>${l.desc}</div><div><span class="tag ${l.type==='tahsilat'?'done':''}">${l.type==='borç'?'Borç':'Tahsilat'}</span></div><div class="lgamt ${l.type==='borç'?'chg':'pmt'}">${l.type==='borç'?'+':'−'}${fTRY(l.amount)}</div></div>`).join('')||'<div class="empty">Hareket yok.</div>';
+  const rows=[...c.ledger].sort((a,el)=>el.date.localeCompare(a.date)).map((l,i)=>`<div class="lgrow" data-lid="${l.id||i}">
+    <div class="lgdate">${fds(l.date)}</div>
+    <div style="flex:1;">${l.desc}</div>
+    <div><span class="tag ${l.type==='tahsilat'?'done':''}">${l.type==='borç'?'Borç':'Tahsilat'}</span></div>
+    <div class="lgamt ${l.type==='borç'?'chg':'pmt'}">${l.type==='borç'?'+':'−'}${fTRY(l.amount)}</div>
+    <div style="display:flex;gap:4px;">
+      <button class="bg lg-edit-btn" data-lid="${l.id||i}" style="padding:3px 8px;font-size:11px;">✏️</button>
+      <button class="bd lg-del-btn" data-lid="${l.id||i}" style="padding:3px 8px;font-size:11px;">✕</button>
+    </div>
+  </div>`).join('')||'<div class="empty">Hareket yok.</div>';
   wrap.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
       <h2 style="margin:0;font-family:Fraunces,serif;">${c.name}</h2>
@@ -2530,7 +2577,43 @@ function rAccDetail(){
       <div class="fi"><label>Tür</label><select id="lgType"><option value="borç">Borç</option><option value="tahsilat">Tahsilat</option></select></div>
       <button class="bp" id="lgAdd">+ Ekle</button>
     </div>`;
-  $('lgAdd').onclick=()=>{const desc=$('lgDesc').value.trim();const amt=Number($('lgAmt').value);if(!desc||!amt){alert('Açıklama ve tutar girin.');return;}c.ledger.push({date:$('lgDate').value||TODAY,desc,amount:amt,type:$('lgType').value});rerender();};
+  $('lgAdd').onclick=()=>{
+    const desc=$('lgDesc').value.trim(); const amt=Number($('lgAmt').value);
+    if(!desc||!amt){alert('Açıklama ve tutar girin.');return;}
+    const editId=wrap.dataset.editLid;
+    if(editId){
+      const li=c.ledger.find(x=>String(x.id||x._i)===editId);
+      if(li){li.date=$('lgDate').value||TODAY;li.desc=desc;li.amount=amt;li.type=$('lgType').value;}
+      delete wrap.dataset.editLid;
+      $('lgAdd').textContent='+ Ekle';
+    } else {
+      c.ledger.push({id:Date.now(),date:$('lgDate').value||TODAY,desc,amount:amt,type:$('lgType').value});
+    }
+    save(); rerender();
+  };
+  // Sil/Düzenle delegasyonu
+  wrap.addEventListener('click',ev=>{
+    const delBtn=ev.target.closest('.lg-del-btn');
+    const editBtn=ev.target.closest('.lg-edit-btn');
+    if(delBtn){
+      const lid=delBtn.dataset.lid;
+      if(!confirm('Bu hareketi sil?')) return;
+      c.ledger=c.ledger.filter((x,i)=>String(x.id||i)!==lid);
+      save(); rerender(); return;
+    }
+    if(editBtn){
+      const lid=editBtn.dataset.lid;
+      const li=c.ledger.find((x,i)=>String(x.id||i)===lid);
+      if(!li) return;
+      $('lgDate').value=li.date||TODAY;
+      $('lgDesc').value=li.desc;
+      $('lgAmt').value=li.amount;
+      $('lgType').value=li.type||'borç';
+      wrap.dataset.editLid=lid;
+      $('lgAdd').textContent='💾 Güncelle';
+      $('lgDate').scrollIntoView({behavior:'smooth'});
+    }
+  },false);
   const remBtn=document.createElement('button');remBtn.className='bg';remBtn.style.cssText='width:100%;margin-top:8px;';remBtn.textContent='📩 Veliye Ödeme Hatırlatması Gönder';remBtn.onclick=()=>sendPaymentReminder(c);wrap.appendChild(remBtn);
 }
 
@@ -2633,6 +2716,46 @@ function rAiTest(){
   $('aiTestLoading').classList.add('hidden');
   $('aiQuizArea').classList.add('hidden');
   $('genTestBtn').onclick=()=>startAiTest(c);
+}
+
+function rParPayments(){
+  const c=getAC();
+  const wrap=$('parPayView');
+  if(!c||!wrap) return;
+
+  const b=bal(c);
+  const paid=(c.ledger||[]).filter(x=>x.type==='tahsilat');
+  const borcs=(c.ledger||[]).filter(x=>x.type==='borç');
+  const totalBorç=borcs.reduce((s,x)=>s+x.amount,0);
+  const totalOdeme=paid.reduce((s,x)=>s+x.amount,0);
+
+  wrap.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">'
+    +'<div style="background:var(--student-soft);border-radius:12px;padding:14px;text-align:center;">'
+    +'<div style="font-size:22px;font-weight:700;color:var(--student);">'+fTRY(c.fee||0)+'</div>'
+    +'<div style="font-size:11px;color:var(--ink-soft);">Aylık Ücret</div></div>'
+    +'<div style="background:#DCFCE7;border-radius:12px;padding:14px;text-align:center;">'
+    +'<div style="font-size:22px;font-weight:700;color:#166534;">'+fTRY(totalOdeme)+'</div>'
+    +'<div style="font-size:11px;color:var(--ink-soft);">Toplam Ödeme</div></div>'
+    +'<div style="background:'+(b>0?'var(--rose-soft)':'#DCFCE7')
+    +';border-radius:12px;padding:14px;text-align:center;">'
+    +'<div style="font-size:22px;font-weight:700;color:'+(b>0?'var(--rose)':'#166534')+';">'+fTRY(Math.abs(b))+'</div>'
+    +'<div style="font-size:11px;color:var(--ink-soft);">'+(b>0?'Bekleyen Borç':'Güncel')+'</div></div>'
+    +'</div>'
+    +'<div class="stit" style="margin-bottom:10px;">📋 Ödeme Geçmişi</div>'
+    +'<div style="border:1px solid var(--line);border-radius:10px;overflow:hidden;">'
+    +((c.ledger||[]).length
+      ? [...c.ledger].sort((a,b)=>b.date.localeCompare(a.date)).map(function(l){
+          return '<div style="display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px;">'
+            +'<div style="color:var(--ink-soft);font-size:12px;width:80px;flex-shrink:0;">'+fds(l.date)+'</div>'
+            +'<div style="flex:1;">'+l.desc+'</div>'
+            +'<div style="flex-shrink:0;"><span class="tag '+(l.type==='tahsilat'?'done':'')+'">'+( l.type==='borç'?'Borç':'Ödendi')+'</span></div>'
+            +'<div style="font-weight:700;color:'+(l.type==='borç'?'var(--rose)':'#166534')
+            +';font-family:JetBrains Mono,monospace;font-size:13px;">'
+            +(l.type==='borç'?'+':'−')+fTRY(l.amount)+'</div>'
+            +'</div>';
+        }).join('')
+      : '<div class="empty" style="padding:20px;">Henüz hareket kaydı yok.</div>')
+    +'</div>';
 }
 function rParDash(){
   const c=getAC();
@@ -3920,7 +4043,7 @@ function rParMessages(){
   markMsgsRead(c.id,thread,'parent');
   renderChatMsgs(getMsgs(c.id,thread),'parent','parChatMsgs');
   const sendBtn=$('parChatSendBtn');
-  if(sendBtn&&!sendBtn.dataset.b){
+  if(sendBtn){
     sendBtn.onclick=function(){
       const inp=$('parChatInput'); if(!inp) return;
       const t=inp.value.trim(); if(!t) return;
@@ -3967,10 +4090,8 @@ function rSmsPage(){
 }
 
 function rParSched(){
-  // Velinin activeClient'ını state.clients'tan fresh al (localStorage sync)
   const raw=getAC();
   const c=raw?state.clients.find(x=>x.id===raw.id)||raw:null;
-  // console.log('[rParSched] client:', c&&c.name, 'schedule:', c&&c.schedule&&c.schedule.length);
   const view=$('parSchedView');
   if(!c){if(view)view.innerHTML='<div class="empty">Öğrenci bulunamadı.</div>';return;}
   const tabs=$('parSchedTabs');
@@ -4009,12 +4130,12 @@ const CNAV=[
   {id:'schedule',l:'Program'},{id:'assignments',l:'Ödevler'},{id:'exams',l:'Deneme Sınavları'},
   {id:'curriculum',l:'Müfredat'},{id:'videotracker',l:'Video Takibi'},{id:'mood',l:'Duygu Takibi'},
   {id:'report',l:'Veli Raporu'},{id:'accounts',l:'Cari Hesap'},
-  {id:'exam-mgmt',l:'📝 Deneme Yönetimi'},{id:'exam-analysis',l:'📊 Deneme Analizi'},
+  // exam-mgmt kaldırıldı (sidebar'da görünmez){id:'exam-analysis',l:'📊 Deneme Analizi'},
   {id:'messages',l:'💬 Mesajlaşma'},{id:'sms',l:'📱 SMS Yönetimi'},
   {id:'ai-coach',l:'🤖 AI Analiz'},{id:'settings',l:'⚙ Ayarlar'}
 ];
 const SNAV=[{id:'st-dashboard',l:'Panom'},{id:'st-schedule',l:'Programım'},{id:'st-assignments',l:'Ödevlerim'},{id:'st-video',l:'Video İzleme'},{id:'st-pomodoro',l:'Kronometre'},{id:'st-messages',l:'💬 Mesajlarım'}];
-const PNAV=[{id:'par-dashboard',l:'Genel Durum'},{id:'par-schedule',l:'Haftalık Program'},{id:'par-messages',l:'💬 Mesajlar'}];
+const PNAV=[{id:'par-dashboard',l:'Genel Durum'},{id:'par-payments',l:'💰 Ödemelerim'},{id:'par-schedule',l:'Haftalık Program'},{id:'par-messages',l:'💬 Mesajlar'}];
 
 function buildSidebar(){
   const sb=$('sb'); const nav=$('navItems'); const foot=$('sbFoot'); const roleEl=$('sbRole');
@@ -4039,7 +4160,7 @@ const pageMap={
   'par-schedule':rParSched, 'par-messages':rParMessages,
   'st-dashboard':rStDash, 'st-schedule':rStSched, 'st-assignments':rStAssign,
   'st-video':rStVideo, 'st-pomodoro':rPom, 'st-aitest':rAiTest, 'st-exam':rStExam,
-  'par-dashboard':rParDash
+  'par-dashboard':rParDash, 'par-payments':rParPayments
 };
 function navTo(pg){
   // Eğer deneme sayfasından çıkılıyorsa ve deneme aktifse timer durdur
@@ -4143,7 +4264,21 @@ function bindAll(){
   // NOTES
   $('saveNoteBtn').onclick=()=>{const c=state.clients.find(x=>x.id===selC.client);if(!c)return;c.notes.push({date:$('noteDate').value||TODAY,title:$('noteTitle').value.trim()||'Seans Notu',note:$('noteText').value.trim()});closeM('mNote');rerender();};
   // ASSIGN
-  $('saveAssBtn').onclick=()=>{const c=state.clients.find(x=>x.id===selC.assign);const title=$('asTitle').value.trim();if(!c||!title){alert('Danışan seçin ve başlık girin.');return;}c.assignments.push({id:Date.now(),subject:$('asSubj').value.trim()||'Genel',title,due:$('asDue').value,done:false,note:$('asNote').value.trim(),autoAdded:false});closeM('mAssign');rerender();};
+  $('saveAssBtn').onclick=()=>{
+    const c=state.clients.find(x=>x.id===selC.assign);
+    const title=$('asTitle').value.trim();
+    if(!c||!title){alert('Danışan seçin ve başlık girin.');return;}
+    const bookEl=$('asBook');
+    const book=bookEl?bookEl.value:'';
+    c.assignments.push({
+      id:Date.now(),
+      subject:$('asSubj').value.trim()||'Genel',
+      title,due:$('asDue').value,done:false,
+      note:$('asNote').value.trim(),
+      book,autoAdded:false
+    });
+    closeM('mAssign');rerender();
+  };
   // VIDEO
   $('tabLocal').onclick=()=>swVTab('local');
   $('tabYt').onclick=()=>swVTab('yt');
