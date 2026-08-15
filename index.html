@@ -262,6 +262,46 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
 
 .sbl-ed{cursor:pointer;}
 .sbl-ed:hover{filter:brightness(1.15);}
+/* ── DENEME KARNESİ ── */
+.karne-wrap{font-family:'Inter',sans-serif;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-bottom:16px;}
+.karne-header{background:linear-gradient(135deg,#1F4140,#2F5D5C);color:#fff;padding:18px 22px;display:flex;justify-content:space-between;align-items:flex-start;}
+.karne-logo{font-family:'Fraunces',serif;font-size:22px;font-weight:700;}
+.karne-logo span{color:#C9764A;}
+.karne-student{font-size:13px;opacity:.9;}
+.karne-exam-name{font-size:16px;font-weight:700;margin-top:4px;}
+.karne-score-box{background:rgba(255,255,255,.15);border-radius:10px;padding:12px 18px;text-align:center;min-width:110px;}
+.karne-score-num{font-size:32px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.karne-score-lbl{font-size:11px;opacity:.8;margin-top:2px;}
+.karne-body{padding:18px 22px;}
+.karne-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:16px;}
+.karne-table th{background:var(--teal-deep);color:#fff;padding:7px 10px;text-align:left;font-weight:600;font-size:11.5px;}
+.karne-table td{padding:7px 10px;border-bottom:1px solid var(--line);}
+.karne-table tr:last-child td{border-bottom:none;}
+.karne-table tr:nth-child(even) td{background:#FAFAF8;}
+.karne-bar-wrap{height:7px;background:var(--line);border-radius:4px;overflow:hidden;min-width:80px;}
+.karne-bar-fill{height:100%;border-radius:4px;transition:width .4s;}
+.karne-last-row{background:var(--teal-deep)!important;color:#fff!important;font-weight:700;}
+.karne-last-row td{color:#fff!important;border-bottom:none!important;}
+.advice-card{background:linear-gradient(135deg,#EEF4FF,#F5F0FF);border:1px solid #C7D7F7;border-radius:12px;padding:16px 18px;margin-top:14px;}
+.advice-card h3{font-size:13px;font-weight:700;color:var(--student);margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.advice-item-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(74,95,201,.12);}
+.advice-item-row:last-child{border-bottom:none;}
+.advice-pri{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:1px;}
+.advice-pri.high{background:#FFE0E0;color:#C0392B;}
+.advice-pri.med{background:#FFF3CD;color:#B7791F;}
+.advice-pri.low{background:#D1FAE5;color:#065F46;}
+.karne-trend{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:8px;}
+.karne-trend.up{background:#D1FAE5;color:#065F46;}
+.karne-trend.down{background:#FFE0E0;color:#C0392B;}
+.karne-trend.same{background:var(--cream);color:var(--ink-soft);}
+.net-chip{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;}
+.net-chip.good{background:#D1FAE5;color:#065F46;}
+.net-chip.mid{background:#FEF9C3;color:#92400E;}
+.net-chip.bad{background:#FFE0E0;color:#C0392B;}
+/* ── DANIŞAN DÜZENLEME ── */
+.cd-edit-btn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;}
+.cd-edit-btn:hover{background:var(--teal-deep);}
+
 /* ── MESAJLAŞMA ── */
 .chat-layout{display:grid;grid-template-columns:240px 1fr;gap:0;height:calc(100vh - 180px);border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--paper);}
 .chat-contacts{border-right:1px solid var(--line);overflow-y:auto;background:var(--cream);}
@@ -748,7 +788,7 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
 </div>
 
 <div class="modal-bg hidden" id="mClient">
-  <div class="modal"><h2>Yeni Danışan</h2>
+  <div class="modal"><h2 id="mClientTitle">Yeni Danışan</h2>
     <div class="fi"><label>Ad Soyad</label><input id="cName"></div>
     <div class="fr"><div class="fi"><label>E-posta</label><input id="cEmail"></div><div class="fi"><label>Telefon</label><input id="cPhone"></div></div>
     <div class="fr"><div class="fi"><label>Okul</label><input id="cSchool"></div><div class="fi"><label>Sınıf</label><select id="cGrade"><option value="">Seçin</option><option>9. Sınıf</option><option>10. Sınıf</option><option>11. Sınıf</option><option>12. Sınıf</option><option>Mezun</option><option>Üniversite 1</option><option>Üniversite 2</option><option>Diğer</option></select></div></div>
@@ -769,52 +809,8 @@ label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-
 <div class="modal-bg hidden" id="mAppt">
   <div class="modal"><h2>Randevu</h2>
     <div class="fi"><label>Danışan</label><select id="apptClient"></select></div>
-    <div class="fr"><div class="fi"><label>Tarih</label><input type="date" id="apptDate"></div><div class="fi"><label>Saat</label><input type="time" id="apptTime"></div></div>
-    <div class="fi"><label>Tür</label><input id="apptType" value="Birebir koçluk seansı"></div>
-    <div class="mac"><button class="bg" data-close="mAppt">Vazgeç</button><button class="bp" id="saveApptBtn">Kaydet</button></div>
-  </div>
-</div>
-
-<div class="modal-bg hidden" id="mNote">
-  <div class="modal"><h2>Seans Notu</h2>
-    <div class="fr"><div class="fi"><label>Tarih</label><input type="date" id="noteDate"></div><div class="fi"><label>Başlık</label><input id="noteTitle"></div></div>
-    <div class="fi"><label>Not</label><textarea id="noteText" rows="3"></textarea></div>
-    <div class="mac"><button class="bg" data-close="mNote">Vazgeç</button><button class="bp" id="saveNoteBtn">Kaydet</button></div>
-  </div>
-</div>
-
-<div class="modal-bg hidden" id="mAssign">
-  <div class="modal"><h2>Ödev Ver</h2>
-    <div class="fr"><div class="fi"><label>Ders</label><input id="asSubj"></div><div class="fi"><label>Son Tarih</label><input type="date" id="asDue"></div></div>
-    <div class="fi"><label>Başlık</label><input id="asTitle"></div>
-    <div class="fi"><label>Not</label><textarea id="asNote" rows="2"></textarea></div>
-    <div class="mac"><button class="bg" data-close="mAssign">Vazgeç</button><button class="bp" id="saveAssBtn">Kaydet</button></div>
-  </div>
-</div>
-
-<div class="modal-bg hidden" id="mVideo">
-  <div class="modal" style="max-width:510px;"><h2>Video Ata</h2>
-    <div class="fi"><label>Başlık</label><input id="vTitle"></div>
-    <div style="display:flex;gap:0;margin-bottom:11px;border:1px solid var(--line);border-radius:9px;overflow:hidden;">
-      <div id="tabLocal" onclick="swVTab('local')" style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;background:var(--teal);color:#fff;">📁 Dosya</div>
-      <div id="tabYt" onclick="swVTab('yt')" style="flex:1;padding:8px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;background:var(--cream);color:var(--ink-soft);">▶ YouTube</div>
-    </div>
-    <div id="panelLocal"><div class="fi"><label>Video Dosyası</label><input type="file" id="vFile" accept="video/*" style="padding:6px;"></div><div style="font-size:11px;color:var(--ink-soft);">⚠ Dosyalar IndexedDB'de oturum bazlı saklanır.</div></div>
-    <div id="panelYt" style="display:none;"><div class="fi"><label>YouTube URL veya embed kodu</label><textarea id="vUrl" rows="2"></textarea></div></div>
-    <div class="fi" style="margin-top:9px;"><label>Açıklama</label><textarea id="vDesc" rows="2"></textarea></div>
-    <div class="mac"><button class="bg" data-close="mVideo">Vazgeç</button><button class="bp" id="saveVBtn">Ata</button></div>
-  </div>
-</div>
-
-<div class="modal-bg hidden" id="mExam">
-  <div class="modal"><h2 id="examMTitle">Deneme Ekle</h2>
-    <input type="hidden" id="examEId">
-    <div class="fr"><div class="fi"><label>Deneme Adı</label><input id="exName"></div><div class="fi"><label>Tarih</label><input type="date" id="exDate"></div></div>
-    <div class="fi"><label>Ders Sonuçları — D/Y/B + Hatalı Konular</label><div id="exSubjs"></div>
+    <div class="fr"><div class="fi"><label>Tarih</label><input type="date" id="apptDate"></div><div class="fi"><label>Saat</label>
 <script>
-
-document.addEventLis
-
 document.addEventListener('DOMContentLoaded', function() {
 
 'use strict';
@@ -1485,6 +1481,7 @@ let selC = {client:null,assign:null,exam:null,cur:null,vt:null,acc:null,mood:nul
 let schedView='weekly', stSchedView='weekly', schedColor='#2F5D5C', vTab='local';
 let pomInt=null, pomSec=25*60, pomRun=false, pomTypeSec=25*60, pomTypeLbl='Pomodoro';
 let chatSelContact=null;
+let mClientEditId=null; // düzenleme modu için
 let parSchedView='weekly'; // {type:'student'|'parent'|'coach', clientId, name}
 let ytInt=null, ytLast=-1, ytCId=null, ytVId=null;
 let aiTestQ=[], aiQIdx=0, aiScore=0, aiStart=0;
@@ -2111,7 +2108,10 @@ function rCDetail(){
           <div class="cs">PIN:<b style="font-family:JetBrains Mono,monospace;"> ${c.pin||'—'}</b> | Veli PIN:<b style="font-family:JetBrains Mono,monospace;"> ${c.parentPin||'—'}</b></div>
         </div>
       </div>
-      <button class="bd" id="cdDel">Sil</button>
+      <div style="display:flex;gap:6px;">
+        <button class="cd-edit-btn" id="cdEdit">✏️ Düzenle</button>
+        <button class="bd" id="cdDel">Sil</button>
+      </div>
     </div>
     <div style="background:var(--cream);border-radius:8px;padding:8px 11px;margin-bottom:13px;font-size:12.5px;"><b>Hedef:</b> ${c.goal||'—'}</div>
     <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><div class="stit" style="margin:0;">Seans Haritası</div><button class="bg" id="cdNote">+ Not</button></div>
@@ -2119,6 +2119,7 @@ function rCDetail(){
     <div class="stit" style="margin-top:14px;">Çalışma Takibi</div>${slH}
     <div class="madd"><input type="number" min="0" placeholder="Saat" id="cdSlH" style="max-width:65px;"><input placeholder="Not" id="cdSlN"><button class="bg" id="cdSlAdd">+ Ekle</button></div>`;
   $('cdDel').onclick=()=>{if(!confirm(c.name+' silinsin mi?'))return;state.clients=state.clients.filter(x=>x.id!==c.id);state.appts=state.appts.filter(a=>a.clientId!==c.id);selC.client=null;rerender();};
+  $('cdEdit').onclick=()=>openClientEdit(c);
   $('cdNote').onclick=()=>{$('noteDate').value=TODAY;$('noteTitle').value='';$('noteText').value='';openM('mNote');};
   $('cdSlAdd').onclick=()=>{const h=Number($('cdSlH').value);if(!h){alert('Saat girin.');return;}c.studyLog.push({date:TODAY,hours:h,note:$('cdSlN').value.trim()});rerender();};
 }
@@ -3247,139 +3248,256 @@ async function emCreate(allSel,singleClient){
 // ═══════════════════════════════════════════════════
 // DENEME ANALİZİ (KOÇPANELI)
 // ═══════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════
+// DANIŞAN DÜZENLEME - saveClientData
+// ═══════════════════════════════════════════════════
+function saveClientData(){
+  const name=$('cName').value.trim();
+  if(!name){alert('Ad girin.');return;}
+  const data={
+    name,
+    email:($('cEmail')||{value:''}).value.trim(),
+    phone:($('cPhone')||{value:''}).value.trim(),
+    school:($('cSchool')||{value:''}).value.trim(),
+    grade:($('cGrade')||{value:''}).value||'',
+    goal:($('cGoal')||{value:''}).value.trim(),
+    fee:Number(($('cFee')||{value:0}).value)||0,
+    pin:($('cPin')||{value:''}).value.trim(),
+    parentPin:($('cParentPin')||{value:''}).value.trim(),
+    books:[...cBookList]
+  };
+  if(mClientEditId){
+    const c=state.clients.find(x=>x.id===mClientEditId);
+    if(c) Object.assign(c,data);
+    mClientEditId=null;
+  } else {
+    const c=Object.assign({id:Date.now()},data,{
+      notes:[],assignments:[],exams:[],curriculum:{},studyLog:[],
+      resources:[],ledger:[],videos:[],videoLogs:[],schedule:[],
+      moodLog:[],pomLog:[],messages:[],examResults:[],aiTests:[]
+    });
+    state.clients.push(c);
+    selC.client=c.id;
+  }
+  const modal=$('mClient');
+  if(modal) modal.classList.add('hidden');
+  const t=$('mClientTitle'); if(t) t.textContent='Yeni Danışan';
+  save(); rerender();
+}
+
+// ═══════════════════════════════════════════════════
+// TYT DENEME KARNESİ - buildKarne
+// ═══════════════════════════════════════════════════
+function buildKarne(c, exam){
+  var name=exam.name||exam.title||'Deneme';
+  var date=exam.date||TODAY;
+  var subjects=[];
+  if(exam.answers){
+    var byT={};
+    (exam.answers||[]).forEach(function(a){
+      var k=a.topic||'Genel';
+      if(!byT[k]) byT[k]={name:k,correct:0,wrong:0,empty:0,weakTopics:[]};
+      if(a.userAnswer===a.correctAnswer) byT[k].correct++;
+      else if(a.userAnswer) byT[k].wrong++;
+      else byT[k].empty++;
+    });
+    subjects=Object.values(byT);
+  } else {
+    subjects=exam.subjects||[];
+  }
+  if(!subjects.length && exam.total){
+    subjects=[{name:'Genel',correct:exam.correct||0,wrong:exam.total-(exam.correct||0),empty:0,weakTopics:[]}];
+  }
+  var totalQ=subjects.reduce(function(s,x){return s+x.correct+x.wrong+x.empty;},0);
+  var totalC=subjects.reduce(function(s,x){return s+x.correct;},0);
+  var totalW=subjects.reduce(function(s,x){return s+x.wrong;},0);
+  var totalE=subjects.reduce(function(s,x){return s+x.empty;},0);
+  var totalNet=subjects.reduce(function(s,x){return s+(x.correct-x.wrong*0.25);},0);
+  var tytPuan=Math.max(0,100+totalNet*2.5).toFixed(3);
+  var pct=totalQ>0?Math.round(totalC/totalQ*100):0;
+
+  var withRate=subjects.map(function(sub){
+    var total=sub.correct+sub.wrong+sub.empty;
+    var net=sub.correct-sub.wrong*0.25;
+    var rate=total>0?sub.correct/total:0;
+    return Object.assign({},sub,{total:total,net:net,rate:rate});
+  }).filter(function(x){return x.total>0;}).sort(function(a,b){return a.rate-b.rate;});
+
+  var weakSubs=withRate.filter(function(x){return x.rate<0.5;});
+  var midSubs=withRate.filter(function(x){return x.rate>=0.5&&x.rate<0.75;});
+  var strongSubs=withRate.filter(function(x){return x.rate>=0.75;});
+
+  var weakTopicAll={};
+  subjects.forEach(function(sub){
+    (sub.weakTopics||[]).forEach(function(t){
+      weakTopicAll[t]=(weakTopicAll[t]||0)+1;
+    });
+  });
+  var topWeakTopics=Object.entries(weakTopicAll).sort(function(a,b){return b[1]-a[1];}).slice(0,8);
+
+  function netClass(n){return n>=15?'good':n>=8?'mid':'bad';}
+
+  function subRow(sub){
+    var barW=Math.min(100,Math.max(0,Math.round(sub.rate*100)));
+    var barColor=sub.rate>=0.75?'#22C55E':sub.rate>=0.5?'#F59E0B':'#EF4444';
+    return '<tr>'
+      +'<td style="font-weight:600;">'+sub.name+'</td>'
+      +'<td style="text-align:center;">'+sub.total+'</td>'
+      +'<td style="text-align:center;color:#065F46;">'+sub.correct+'</td>'
+      +'<td style="text-align:center;color:#C0392B;">'+sub.wrong+'</td>'
+      +'<td style="text-align:center;color:var(--ink-soft);">'+sub.empty+'</td>'
+      +'<td style="text-align:center;"><span class="net-chip '+netClass(sub.net)+'">'+sub.net.toFixed(2)+'</span></td>'
+      +'<td><div style="display:flex;align-items:center;gap:6px;">'
+      +'<div class="karne-bar-wrap" style="flex:1;"><div class="karne-bar-fill" style="width:'+barW+'%;background:'+barColor+';"></div></div>'
+      +'<span style="font-size:11px;color:var(--ink-soft);width:32px;text-align:right;">'+barW+'%</span>'
+      +'</div></td></tr>';
+  }
+
+  var advices=buildKarneAdvice(c,withRate,topWeakTopics,totalNet,pct);
+
+  return '<div class="karne-wrap">'
+    +'<div class="karne-header">'
+    +'<div>'
+    +'<div class="karne-logo">Bİ<span style="color:#C9764A;">KOÇ</span></div>'
+    +'<div class="karne-student" style="margin-top:6px;">'
+    +'<div style="font-weight:700;font-size:15px;">'+c.name+'</div>'
+    +'<div style="opacity:.8;">'+(c.grade||'')+' '+(c.school?'· '+c.school:'')+'</div>'
+    +'<div style="font-weight:700;font-size:14px;margin-top:4px;">'+name+'</div>'
+    +'<div style="opacity:.75;font-size:12px;">'+fd(date)+'</div>'
+    +'</div></div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;">'
+    +'<div class="karne-score-box"><div class="karne-score-num">'+totalNet.toFixed(1)+'</div><div class="karne-score-lbl">Toplam Net</div></div>'
+    +'<div class="karne-score-box"><div class="karne-score-num">'+tytPuan+'</div><div class="karne-score-lbl">TYT Puanı</div></div>'
+    +'<div class="karne-score-box"><div class="karne-score-num">%'+pct+'</div><div class="karne-score-lbl">Başarı</div></div>'
+    +'</div></div>'
+    +'<div class="karne-body">'
+    +'<div class="stit" style="margin-bottom:10px;">📊 Ders Bazlı Sonuçlar</div>'
+    +'<table class="karne-table"><thead><tr>'
+    +'<th>Ders</th><th style="text-align:center;">Soru</th><th style="text-align:center;">Doğru</th>'
+    +'<th style="text-align:center;">Yanlış</th><th style="text-align:center;">Boş</th>'
+    +'<th style="text-align:center;">Net</th><th>Başarı</th>'
+    +'</tr></thead><tbody>'
+    +withRate.map(subRow).join('')
+    +'<tr class="karne-last-row">'
+    +'<td>TOPLAM</td><td style="text-align:center;">'+totalQ+'</td>'
+    +'<td style="text-align:center;">'+totalC+'</td><td style="text-align:center;">'+totalW+'</td>'
+    +'<td style="text-align:center;">'+totalE+'</td>'
+    +'<td style="text-align:center;">'+totalNet.toFixed(2)+'</td><td>%'+pct+'</td>'
+    +'</tr></tbody></table>'
+    +(topWeakTopics.length
+      ?'<div class="stit" style="margin-bottom:8px;">🔴 Zayıf Konular</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">'
+      +topWeakTopics.map(function(x){return '<span style="background:var(--rose-soft);color:var(--rose);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;">'+x[0]+' <span style="opacity:.7;">('+x[1]+'×)</span></span>';}).join('')
+      +'</div>':'')
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">'
+    +'<div style="background:#DCFCE7;border-radius:10px;padding:10px;">'
+    +'<div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:5px;">💪 Güçlü Dersler</div>'
+    +(strongSubs.length?strongSubs.map(function(x){return '<div style="font-size:12px;color:#166534;">✓ '+x.name+' (%'+Math.round(x.rate*100)+')</div>';}).join(''):'<div style="font-size:12px;color:var(--ink-soft);">—</div>')
+    +'</div>'
+    +'<div style="background:#FEF9C3;border-radius:10px;padding:10px;">'
+    +'<div style="font-size:11px;font-weight:700;color:#92400E;margin-bottom:5px;">⚡ Geliştirilecek</div>'
+    +(midSubs.length?midSubs.map(function(x){return '<div style="font-size:12px;color:#92400E;">→ '+x.name+' (%'+Math.round(x.rate*100)+')</div>';}).join(''):'<div style="font-size:12px;color:var(--ink-soft);">—</div>')
+    +'</div>'
+    +'<div style="background:#FFE4E6;border-radius:10px;padding:10px;">'
+    +'<div style="font-size:11px;font-weight:700;color:#9F1239;margin-bottom:5px;">🆘 Acil</div>'
+    +(weakSubs.length?weakSubs.map(function(x){return '<div style="font-size:12px;color:#9F1239;">✗ '+x.name+' (%'+Math.round(x.rate*100)+')</div>';}).join(''):'<div style="font-size:12px;color:var(--ink-soft);">—</div>')
+    +'</div></div>'
+    +advices
+    +'</div></div>';
+}
+
+function buildKarneAdvice(c,withRate,topWeakTopics,totalNet,pct){
+  var advices=[];
+  var weakSubs=withRate.filter(function(x){return x.rate<0.5;});
+  var strongSubs=withRate.filter(function(x){return x.rate>=0.75;});
+  var genIcon='',genMsg='';
+  if(pct>=80){genIcon='🏆';genMsg='Harika performans! Üst düzey hedeflere odaklanabilir.';}
+  else if(pct>=65){genIcon='💪';genMsg='Ortalamanın üzerinde. Zayıf konuları kapatarak büyük sıçrama yapabilir.';}
+  else if(pct>=50){genIcon='📈';genMsg='Gelişim potansiyeli yüksek. Sistematik çalışmayla hızla yükselebilir.';}
+  else{genIcon='🎯';genMsg='Temel konu çalışmasına odaklanma zamanı. Önce eksikleri tamamlayalım.';}
+  advices.push({pri:'',icon:genIcon,title:'Genel Değerlendirme',text:genMsg});
+  if(weakSubs.length){
+    advices.push({pri:'high',icon:'🚨',title:'Acil Konu Takviyesi',
+      text:weakSubs.map(function(x){return x.name;}).join(', ')+' dersinde başarı %50 altında. Haftada en az 3 saat ek çalışma planlanmalı.'});
+  }
+  if(topWeakTopics.length>=3){
+    advices.push({pri:'high',icon:'📌',title:'Öncelikli Konular',
+      text:'"'+topWeakTopics.slice(0,3).map(function(x){return x[0];}).join(', ')+'" konularında tekrarlayan hatalar. Özel soru bankası çalışması başlatılmalı.'});
+  }
+  if(strongSubs.length){
+    advices.push({pri:'low',icon:'⚡',title:'Güçlü Alanları Koru',
+      text:strongSubs.map(function(x){return x.name;}).join(', ')+' dersinde güçlü performans. Haftada 1 pratik seansı yeterli.'});
+  }
+  var negSubs=withRate.filter(function(x){return x.wrong>x.correct*0.3;});
+  if(negSubs.length){
+    advices.push({pri:'med',icon:'⚠️',title:'Yanlış Analizi',
+      text:negSubs.map(function(x){return x.name;}).join(', ')+' dersinde bilinçsiz işaretleme var. Emin olunmayan sorular boş bırakılmalı.'});
+  }
+  var nextTarget=Math.min(120,Math.round(totalNet*1.15+3));
+  advices.push({pri:'med',icon:'🎯',title:'Sonraki Deneme Hedefi',
+    text:'Bu denemede '+totalNet.toFixed(1)+' net. Hedef: '+nextTarget+'+ net. Haftada 2 deneme + günlük konu tekrarı önerilir.'});
+  return '<div class="advice-card"><h3>🤖 Koç Tavsiyeleri</h3>'
+    +advices.map(function(a){
+      var priLbl=a.pri==='high'?'ACİL':a.pri==='med'?'ÖNEMLİ':a.pri==='low'?'TAVSİYE':'';
+      return '<div class="advice-item-row">'
+        +'<span style="font-size:18px;flex-shrink:0;">'+a.icon+'</span>'
+        +'<div style="flex:1;">'
+        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">'
+        +'<b style="font-size:12.5px;">'+a.title+'</b>'
+        +(a.pri?'<span class="advice-pri '+a.pri+'">'+priLbl+'</span>':'')
+        +'</div>'
+        +'<div style="font-size:12px;color:var(--ink-soft);line-height:1.5;">'+a.text+'</div>'
+        +'</div></div>';
+    }).join('')+'</div>';
+}
+
+// ═══════════════════════════════════════════════════
+// DENEME ANALİZ SAYFASI (rExamAnalysis + rExamAnDetail güncellendi)
+// ═══════════════════════════════════════════════════
 function rExamAnalysis(){
-  const list=$('examAnCL'); list.innerHTML='';
-  state.clients.forEach(c=>{
-    const d=document.createElement('div'); d.className='ci'+(c.id===examAnSelId?' active':'');
-    const cnt=(c.examResults||[]).length;
-    d.innerHTML=`<div class="av">${ini(c.name)}</div><div><div class="cn">${c.name}</div><div class="cs">${cnt} deneme sonucu</div></div>`;
-    d.onclick=()=>{examAnSelId=c.id; rExamAnalysis(); rExamAnDetail();};
+  var list=$('examAnCL'); list.innerHTML='';
+  state.clients.forEach(function(c){
+    var d=document.createElement('div');
+    d.className='ci'+(c.id===examAnSelId?' active':'');
+    var cnt=(c.examResults||[]).length+c.exams.length;
+    d.innerHTML='<div class="av">'+ini(c.name)+'</div><div><div class="cn">'+c.name+'</div><div class="cs">'+cnt+' deneme</div></div>';
+    d.onclick=function(){examAnSelId=c.id; rExamAnalysis(); rExamAnDetail();};
     list.appendChild(d);
   });
   rExamAnDetail();
 }
 
 function rExamAnDetail(){
-  const wrap=$('examAnPanel');
-  const c=state.clients.find(x=>x.id===examAnSelId);
+  var wrap=$('examAnPanel');
+  var c=state.clients.find(function(x){return x.id===examAnSelId;});
   if(!c){wrap.innerHTML='<div class="empty">Danışan seçin</div>';return;}
-  const results=(c.examResults||[]).slice().reverse();
-  if(!results.length){
-    wrap.innerHTML=`<h2 style="margin:0 0 13px;font-family:Fraunces,serif;">${c.name}</h2><div class="empty">Henüz tamamlanan deneme yok.</div>`;
+  var onlineR=(c.examResults||[]).slice().reverse();
+  var manualE=c.exams.slice().reverse();
+  var allExams=onlineR.map(function(r){return Object.assign({},r,{_type:'online'});})
+    .concat(manualE.map(function(e){return Object.assign({},e,{_type:'manual'});}));
+  if(!allExams.length){
+    wrap.innerHTML='<h2 style="margin:0 0 13px;font-family:Fraunces,serif;">'+c.name+'</h2><div class="empty">Henüz deneme yok.</div>';
     return;
   }
-
-  // ─── İstatistik hesapla ───
-  const avgPct=Math.round(results.reduce((s,r)=>s+r.pct,0)/results.length);
-  const best=results.reduce((a,b)=>b.pct>a.pct?b:a);
-  const worst=results.reduce((a,b)=>b.pct<a.pct?b:a);
-
-  // Konu bazlı hata analizi
-  const topicErrors={};
-  results.forEach(r=>{
-    if(!r.answers) return;
-    r.answers.forEach(a=>{
-      if(!a.correct){
-        const k=a.topic||r.title;
-        topicErrors[k]=(topicErrors[k]||0)+1;
-      }
-    });
-  });
-  const weakTopics=Object.entries(topicErrors).sort((a,b)=>b[1]-a[1]).slice(0,5);
-
-  // ─── AI Tavsiyeleri üret ───
-  const advices=generateAdvice(c,results,weakTopics);
-
-  // ─── Net trend SVG ───
-  const trendH=(()=>{
-    if(results.length<2) return '';
-    const rev=[...results].reverse();
-    const pcts=rev.map(r=>r.pct);
-    const W=400,H=80,pad=20;
-    const mx=Math.max(...pcts,100),mn=0;
-    const pts=pcts.map((p,i)=>[pad+i*(W-pad*2)/(pcts.length-1),H-pad-((p-mn)/(mx-mn))*(H-pad*2)]);
-    const path=pts.map((p,i)=>(i===0?'M':'L')+p[0]+','+p[1]).join(' ');
-    const dots=pts.map((p,i)=>`<circle fill="var(--student)" cx="${p[0]}" cy="${p[1]}" r="4"/><text font-size="10" font-family="JetBrains Mono,monospace" fill="var(--ink-soft)" x="${p[0]}" y="${H-4}" text-anchor="middle">${fds(rev[i].date)}</text><text font-size="11" fill="var(--student)" font-weight="700" x="${p[0]}" y="${p[1]-7}" text-anchor="middle">${pcts[i]}%</text>`).join('');
-    return`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet"><path fill="none" stroke="var(--student)" stroke-width="2.5" d="${path}"/>${dots}</svg>`;
-  })();
-
-  // ─── HTML oluştur ───
-  wrap.innerHTML=`
-    <h2 style="margin:0 0 14px;font-family:Fraunces,serif;">${c.name} — Deneme Analizi</h2>
-
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">
-      <div style="background:var(--student-soft);border-radius:10px;padding:11px;text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:var(--student);">${avgPct}%</div>
-        <div style="font-size:10.5px;color:var(--ink-soft);">Ortalama</div>
-      </div>
-      <div style="background:#E3EEE3;border-radius:10px;padding:11px;text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:var(--good);">${best.pct}%</div>
-        <div style="font-size:10.5px;color:var(--ink-soft);">En İyi</div>
-      </div>
-      <div style="background:var(--rose-soft);border-radius:10px;padding:11px;text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:var(--rose);">${worst.pct}%</div>
-        <div style="font-size:10.5px;color:var(--ink-soft);">En Düşük</div>
-      </div>
-      <div style="background:var(--cream);border-radius:10px;padding:11px;text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:var(--teal-deep);">${results.length}</div>
-        <div style="font-size:10.5px;color:var(--ink-soft);">Deneme</div>
-      </div>
-    </div>
-
-    ${trendH?`<div class="stit">Puan Trendi</div><div style="margin-bottom:14px;">${trendH}</div>`:''}
-
-    ${advices.length?`<div class="stit">🎯 Koç Tavsiyeleri</div>
-    <div class="advice-box" style="margin-bottom:16px;">${advices.map(a=>`<div class="advice-item"><div class="advice-icon">${a.icon}</div><div class="advice-text"><b>${a.title}:</b> ${a.text}</div></div>`).join('')}</div>`:''}
-
-    ${weakTopics.length?`<div class="stit">🔴 En Çok Hata Yapılan Konular</div>
-    <div style="margin-bottom:14px;">${weakTopics.map(([topic,cnt],i)=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);">
-        <div style="width:22px;height:22px;border-radius:50%;background:var(--rose);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</div>
-        <div style="flex:1;font-size:13px;font-weight:600;">${topic}</div>
-        <div style="font-size:12px;color:var(--rose);font-family:'JetBrains Mono',monospace;">${cnt} hata</div>
-      </div>`).join('')}</div>`:''}
-
-    <div class="stit">Deneme Listesi</div>
-    <div id="examAnList">${results.map(r=>`
-      <div class="ec" style="margin-bottom:10px;">
-        <div class="ehead">
-          <div>
-            <div class="ename">${r.title}</div>
-            <div class="edate">${fd(r.date)} · ${r.total} soru · ${Math.floor(r.elapsed/60)}dk ${r.elapsed%60}sn</div>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <span class="tag ${r.pct>=70?'done':r.pct>=50?'auto':''}" style="font-size:13px;padding:4px 10px;">${r.pct}%</span>
-            <span style="font-size:12px;color:var(--ink-soft);">${r.correct}/${r.total} doğru</span>
-            <button class="bg exam-an-detail-btn" data-rid="${r.id}" style="padding:4px 10px;font-size:11px;">Detay</button>
-          </div>
-        </div>
-        <div class="exam-an-detail-wrap hidden" id="ead-${r.id}" style="margin-top:10px;"></div>
-      </div>`).join('')}</div>`;
-
-  // Detay butonları
-  wrap.querySelectorAll('.exam-an-detail-btn').forEach(btn=>{
-    btn.onclick=()=>{
-      const rid=Number(btn.dataset.rid);
-      const r=results.find(x=>x.id===rid);
-      const detailWrap=$('ead-'+rid);
-      if(!detailWrap) return;
-      if(!detailWrap.classList.contains('hidden')){detailWrap.classList.add('hidden');btn.textContent='Detay';return;}
-      detailWrap.classList.remove('hidden');
-      btn.textContent='Kapat';
-      if(!r.answers||!r.answers.length){detailWrap.innerHTML='<div style="font-size:12.5px;color:var(--ink-soft);">Soru detayı yok.</div>';return;}
-      detailWrap.innerHTML=`<div style="max-height:300px;overflow-y:auto;">${r.answers.map((a,i)=>`
-        <div style="padding:8px 0;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:flex-start;">
-          <div style="width:22px;height:22px;border-radius:50%;background:${a.correct?'var(--good)':'var(--rose)'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">${i+1}</div>
-          <div style="flex:1;">
-            <div style="font-size:12.5px;font-weight:600;margin-bottom:2px;">${a.question}</div>
-            <div style="font-size:12px;color:${a.correct?'var(--good)':'var(--rose)'};">
-              ${a.correct?'✓ Doğru':'✗ Yanlış — Doğrusu: '+a.correctAnswer}
-            </div>
-            ${a.userAnswer&&!a.correct?`<div style="font-size:11.5px;color:var(--ink-soft);">Verilen cevap: ${a.userAnswer}</div>`:''}
-          </div>
-        </div>`).join('')}</div>`;
-    };
-  });
+  var selId=wrap._selExamId||allExams[0].id;
+  var selExam=allExams.find(function(x){return x.id===selId;})||allExams[0];
+  wrap.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">'
+    +'<h2 style="margin:0;font-family:Fraunces,serif;">'+c.name+'</h2>'
+    +'<div style="display:flex;gap:8px;align-items:center;">'
+    +'<select id="karneExamSel" style="font-size:12.5px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;">'
+    +allExams.map(function(ex){return '<option value="'+ex.id+'">'+(ex.name||ex.title||'Deneme')+' — '+fd(ex.date)+'</option>';}).join('')
+    +'</select>'
+    +'</div></div>'
+    +'<div id="karneArea">'+buildKarne(c,selExam)+'</div>';
+  $('karneExamSel').value=String(selId);
+  $('karneExamSel').onchange=function(){
+    var id=Number($('karneExamSel').value);
+    var ex=allExams.find(function(x){return x.id===id;});
+    if(!ex) return;
+    wrap._selExamId=id;
+    $('karneArea').innerHTML=buildKarne(c,ex);
+  };
 }
 
 function generateAdvice(c,results,weakTopics){
@@ -3908,11 +4026,7 @@ function bindAll(){
   // CLIENTS
   // addClientBtn binding moved to end of bindAll
   $('clientSearch').oninput=()=>rClients();
-  $('saveClientBtn').onclick=()=>{
-    const name=$('cName').value.trim(); if(!name){alert('Ad girin.');return;}
-    const c={id:Date.now(),name,email:$('cEmail').value.trim(),phone:$('cPhone').value.trim(),school:$('cSchool').value.trim(),grade:$('cGrade').value,goal:$('cGoal').value.trim(),fee:Number($('cFee').value)||0,pin:$('cPin').value.trim(),parentPin:$('cParentPin').value.trim(),notes:[],assignments:[],exams:[],curriculum:{},studyLog:[],resources:[],ledger:[],videos:[],videoLogs:[],schedule:[],moodLog:[],pomLog:[],messages:[],books:[...cBookList],examResults:[],aiTests:[]};
-    state.clients.push(c); selC.client=c.id; closeM('mClient'); rerender();
-  };;
+  $('saveClientBtn').onclick=()=>saveClientData();;
   // APPOINTMENTS
   $('addApptBtn').onclick=()=>{$('apptClient').innerHTML=state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');$('apptDate').value=TODAY;$('apptTime').value='10:00';$('apptType').value='Birebir koçluk seansı';openM('mAppt');};
   $('saveApptBtn').onclick=()=>{const d=$('apptDate').value;const t=$('apptTime').value;if(!d||!t){alert('Tarih ve saat girin.');return;}state.appts.push({id:Date.now(),clientId:Number($('apptClient').value),date:d,time:t,type:$('apptType').value.trim()||'Koçluk seansı'});closeM('mAppt');rerender();};
@@ -4024,4 +4138,6 @@ updPom(pomSec);
 bindAll();
 
 }); // end DOMContentLoaded
-ml>
+</script>
+</body>
+</html>
