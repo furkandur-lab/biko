@@ -3317,6 +3317,25 @@ async function emCreate(allSel,singleClient){
 // ═══════════════════════════════════════════════════
 // DANIŞAN DÜZENLEME - saveClientData
 // ═══════════════════════════════════════════════════
+
+function openClientEdit(c){
+  mClientEditId = c.id;
+  const t=$('mClientTitle'); if(t) t.textContent='Danışanı Düzenle';
+  const set=(id,v)=>{const el=$(id);if(el)el.value=v||'';};
+  set('cName',c.name);
+  set('cEmail',c.email);
+  set('cPhone',c.phone);
+  set('cSchool',c.school);
+  set('cGoal',c.goal);
+  set('cPin',c.pin);
+  set('cParentPin',c.parentPin);
+  set('cFee',c.fee||0);
+  const gr=$('cGrade'); if(gr) gr.value=c.grade||'';
+  cBookList=[...(c.books||[])];
+  const tags=$('cBookTags'); if(tags) tags.innerHTML='';
+  const modal=$('mClient'); if(modal) modal.classList.remove('hidden');
+  setTimeout(()=>{initBookInput(); renderBookTags(cBookList,'cBookTags');},50);
+}
 function saveClientData(){
   const name=$('cName').value.trim();
   if(!name){alert('Ad girin.');return;}
