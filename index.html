@@ -3154,74 +3154,99 @@ async function extractPdfText(file){
 }
 
 async function extractQuestionsFromText(text, key){
-  // Metin çok uzunsa ilk 12000 karakter al (Groq token limiti)
-  const truncated = text.length>12000 ? text.slice(0,12000)+'...[kısaltıldı]' : text;
+  // PDF metni chunk'lara böl (her chunk ~3500 karakter)
+  const CHUNK_SIZE = 3500;
+  const OVERLAP    = 200;
+  const chunks = [];
+  let pos = 0;
+  while(pos < text.length){
+    chunks.push(text.slice(pos, pos+CHUNK_SIZE));
+    pos += CHUNK_SIZE - OVERLAP;
+    if(chunks.length >= 6) break; // max 6 chunk = ~21000 karakter
+  }
 
-  const prompt=`Aşağıdaki PDF'den alınan Türkçe sınav metninden SADECE çoktan seçmeli soruları çıkar.
+  const MODELS = ['llama-3.3-70b-versatile','llama-3.1-70b-versatile','llama-3.1-8b-instant'];
+  const allQuestions = [];
+  let lastErr = '';
+
+  for(let ci=0; ci<chunks.length; ci++){
+    const chunk = chunks[ci];
+    // Soru içerip içermediğini hızlı kontrol
+    if(!/[A-Da-d]\)|soru|SORU|\?\s*A\s*\)/i.test(chunk)) continue;
+
+    const prompt = `PDF sınav metninden çoktan seçmeli soruları JSON olarak çıkar.
+SADECE JSON döndür, açıklama yazma.
+Format: {"questions":[{"question":"...","options":["A) ...","B) ...","C) ...","D) ..."],"correctAnswer":"A) ..."}]}
 
 METİN:
-${truncated}
+${chunk}`;
 
-KURALLAR:
-1. Her soru için: soru metni, A/B/C/D şıkları ve doğru cevabı belirle
-2. Doğru cevabı metin içindeki cevap anahtarından al, yoksa kendi bilginle belirle
-3. Soru numaraları, "A)", "B)" gibi şık göstergeleri içeriği değil
-4. SADECE JSON döndür, başka hiçbir şey yazma:
-
-{"questions":[{"question":"Soru metni","options":["A) ...","B) ...","C) ...","D) ..."],"correctAnswer":"A) ...","explanation":"Kısa açıklama (opsiyonel)"}]}`;
-
-  const MODELS=['llama-3.3-70b-versatile','llama-3.1-70b-versatile','llama-3.1-8b-instant'];
-  let lastErr='';
-
-  for(const model of MODELS){
-    try{
-      const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-        body:JSON.stringify({
-          model,
-          messages:[{role:'user',content:prompt}],
-          temperature:0.1,
-          max_tokens:6000
-        })
-      });
-      const data=await resp.json();
-      if(!resp.ok){lastErr=model+': '+(data.error?.message||resp.status);continue;}
-
-      const text2=data.choices?.[0]?.message?.content||'';
-      if(!text2){lastErr=model+': boş yanıt';continue;}
-
-      // JSON parse
-      const clean=text2.replace(/```json|```/g,'').trim();
-      let parsed;
-      try{parsed=JSON.parse(clean);}
-      catch(e){
-        const m=clean.match(/\{[\s\S]*"questions"[\s\S]*\}/);
-        if(!m){lastErr=model+': JSON parse hatası';continue;}
-        parsed=JSON.parse(m[0]);
-      }
-
-      if(!parsed?.questions?.length){lastErr=model+': soru bulunamadı';continue;}
-
-      // Şık formatını normalize et (A) ile başlamıyorsa düzelt)
-      return parsed.questions.map(q=>{
-        const opts=q.options.map((o,i)=>{
-          const prefix=['A)','B)','C)','D)'][i];
-          return o.startsWith(prefix)?o:prefix+' '+o.replace(/^[A-Da-d][)\.]?\s*/,'');
+    for(const model of MODELS){
+      try{
+        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+          body: JSON.stringify({
+            model,
+            messages:[{role:'user',content:prompt}],
+            temperature: 0.1,
+            max_tokens: 2000
+          })
         });
-        let ans=q.correctAnswer||opts[0];
-        if(!opts.includes(ans)){
-          // Cevap "A" veya "A." formatındaysa dönüştür
-          const letter=ans.replace(/[^A-Da-d]/g,'').toUpperCase();
-          const idx=['A','B','C','D'].indexOf(letter);
-          if(idx>=0&&opts[idx]) ans=opts[idx];
+        const data = await resp.json();
+        if(!resp.ok){
+          const msg = data.error?.message||'HTTP '+resp.status;
+          // Rate limit → sonraki modeli dene
+          if(resp.status===429||msg.includes('rate')||msg.includes('quota')||msg.includes('TPM')){
+            lastErr = model+': '+msg;
+            await new Promise(r=>setTimeout(r,1000));
+            continue;
+          }
+          lastErr = model+': '+msg; continue;
         }
-        return{question:q.question,options:opts,correctAnswer:ans,explanation:q.explanation||''};
-      }).filter(q=>q.question&&q.options.length>=2);
-
-    }catch(e){lastErr=model+': '+e.message;}
+        const raw = data.choices?.[0]?.message?.content||'';
+        if(!raw){lastErr=model+': boş yanıt'; continue;}
+        const clean = raw.replace(/```json|```/g,'').trim();
+        let parsed;
+        try{parsed=JSON.parse(clean);}
+        catch(e){
+          const m = clean.match(/\{[\s\S]*"questions"[\s\S]*\}/);
+          if(!m){lastErr=model+': JSON parse hatası'; continue;}
+          try{parsed=JSON.parse(m[0]);}catch(e2){lastErr=model+': JSON parse 2'; continue;}
+        }
+        const qs = parsed?.questions||[];
+        if(!qs.length){lastErr=model+': soru bulunamadı'; continue;}
+        // Şıkları normalize et
+        const norm = qs.map(q=>{
+          const opts=(q.options||[]).map((o,i)=>{
+            const p=['A)','B)','C)','D)'][i];
+            if(!p) return o;
+            return o.startsWith(p)?o: p+' '+o.replace(/^[A-Da-d][).]\s*/,'');
+          });
+          let ans=q.correctAnswer||opts[0]||'';
+          if(ans&&!opts.includes(ans)){
+            const lt=ans.replace(/[^A-Da-d]/g,'').toUpperCase();
+            const idx2=['A','B','C','D'].indexOf(lt);
+            if(idx2>=0&&opts[idx2]) ans=opts[idx2];
+          }
+          return{question:q.question,options:opts,correctAnswer:ans,explanation:q.explanation||''};
+        }).filter(q=>q.question&&q.options.length>=2);
+        allQuestions.push(...norm);
+        break; // Bu chunk başarılı, sonrakine geç
+      }catch(err){lastErr=model+': '+err.message;}
+    }
   }
-  throw new Error('AI soruları çıkaramadı: '+lastErr);
+
+  // Tekrar eden soruları filtrele
+  const seen = new Set();
+  const unique = allQuestions.filter(q=>{
+    const key2 = q.question.slice(0,40);
+    if(seen.has(key2)) return false;
+    seen.add(key2); return true;
+  });
+
+  if(!unique.length) throw new Error('PDF\'den soru çıkarılamadı: '+lastErr+'\n\nİpucu: PDF metin tabanlı (taranmış değil) ve A/B/C/D şıklı sorular içermeli.');
+  return unique;
 }
 
 function emSwTab(t){
